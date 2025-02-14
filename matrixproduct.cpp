@@ -1,198 +1,293 @@
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <time.h>
 #include <cstdlib>
 #include <papi.h>
+#include <filesystem>
 
 using namespace std;
 
 #define SYSTEMTIME clock_t
 
- 
-void OnMult(int m_ar, int m_br) 
+// Initialize matrix
+// Print first elements
+
+double *init_array(int m, int n, bool fill)
 {
-	
+	double *mat = (double *)malloc((m * n) * sizeof(double));
+	if (mat == NULL)
+	{
+		perror("Error in init_array");
+		return NULL;
+	}
+
+	if (!fill)
+		return mat;
+
+	for (int i = 0; i < m; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			mat[i * n + j] = i + j + 1; // TODO(Process-ing): Check if value matters
+		}
+	}
+
+	return mat;
+}
+
+void print_time_diff(SYSTEMTIME ti, SYSTEMTIME tf)
+{
+	cout << "Time: "
+		 << fixed << setw(3) << setprecision(3)
+		 << (double)(tf - ti) / CLOCKS_PER_SEC
+		 << " seconds\n";
+}
+
+// Displays 10 elements of the result matrix to verify correctness
+void print_first_elems(double *mat, int n, int m)
+{
+	for (int j = 0; j < min(m, 10); j++)
+		cout << mat[j] << " ";
+	cout << endl;
+}
+
+double OnMult(int m_ar, int m_br, int m_cr)
+{
 	SYSTEMTIME Time1, Time2;
-	
-	char st[100];
+
 	double temp;
 	int i, j, k;
 
 	double *pha, *phb, *phc;
-	
 
-		
-    pha = (double *)malloc((m_ar * m_ar) * sizeof(double));
-	phb = (double *)malloc((m_ar * m_ar) * sizeof(double));
-	phc = (double *)malloc((m_ar * m_ar) * sizeof(double));
+	pha = init_array(m_ar, m_br, true);
+	phb = init_array(m_br, m_cr, true);
+	phc = init_array(m_ar, m_cr, false);
 
-	for(i=0; i<m_ar; i++)
-		for(j=0; j<m_ar; j++)
-			pha[i*m_ar + j] = (double)1.0;
+	if (pha == NULL || phb == NULL || phc == NULL)
+		return -1.0;
 
+	Time1 = clock();
 
-
-	for(i=0; i<m_br; i++)
-		for(j=0; j<m_br; j++)
-			phb[i*m_br + j] = (double)(i+1);
-
-
-
-    Time1 = clock();
-
-	for(i=0; i<m_ar; i++)
-	{	for( j=0; j<m_br; j++)
-		{	temp = 0;
-			for( k=0; k<m_ar; k++)
-			{	
-				temp += pha[i*m_ar+k] * phb[k*m_br+j];
-			}
-			phc[i*m_ar+j]=temp;
+	for (i = 0; i < m_ar; i++)
+	{
+		for (j = 0; j < m_cr; j++)
+		{
+			temp = 0;
+			for (k = 0; k < m_br; k++)
+				temp += pha[i * m_br + k] * phb[k * m_cr + j];
+			phc[i * m_cr + j] = temp;
 		}
 	}
 
+	Time2 = clock();
+	print_time_diff(Time1, Time2);
 
-    Time2 = clock();
-	sprintf(st, "Time: %3.3f seconds\n", (double)(Time2 - Time1) / CLOCKS_PER_SEC);
-	cout << st;
-
-	// display 10 elements of the result matrix tto verify correctness
+	// TODO(Process-ing): Is this necessary?
 	cout << "Result matrix: " << endl;
-	for(i=0; i<1; i++)
-	{	for(j=0; j<min(10,m_br); j++)
-			cout << phc[j] << " ";
-	}
-	cout << endl;
+	print_first_elems(phc, m_ar, m_cr);
 
-    free(pha);
-    free(phb);
-    free(phc);
-	
-	
+	free(pha);
+	free(phb);
+	free(phc);
+
+	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC;  // in milliseconds
 }
 
-// add code here for line x line matriz multiplication
-void OnMultLine(int m_ar, int m_br)
+// add code here for line x line matrix multiplication
+double OnMultLine(int m_ar, int m_br, int m_cr)
 {
-    
-    
+	SYSTEMTIME Time1, Time2;
+
+	double temp;
+	int i, j, k;
+
+	double *pha, *phb, *phc;
+
+	pha = init_array(m_ar, m_br, true);
+	phb = init_array(m_br, m_cr, true);
+	phc = init_array(m_ar, m_cr, false);
+
+	if (pha == NULL || phb == NULL || phc == NULL)
+		return -1.0;
+
+	Time1 = clock();
+
+	for (i = 0; i < m_ar; i++)
+	{
+		for (k = 0; k < m_br; k++)
+		{
+			// TODO (Process-ing): Remove temporary variable (maybe?)
+			temp = 0;
+			for (j = 0; j < m_cr; j++)
+				temp += pha[i * m_br + k] * phb[k * m_cr + j];
+			phc[i * m_cr + j] = temp;
+		}
+	}
+
+	Time2 = clock();
+	print_time_diff(Time1, Time2);
+
+	// TODO(Process-ing): Is this necessary?
+	cout << "Result matrix: " << endl;
+	print_first_elems(phc, m_ar, m_cr);
+
+	free(pha);
+	free(phb);
+	free(phc);
+
+	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC;  // in milliseconds
 }
 
-// add code here for block x block matriz multiplication
+// add code here for block x block matrix multiplication
 void OnMultBlock(int m_ar, int m_br, int bkSize)
 {
-    
-    
 }
 
-
-
-void handle_error (int retval)
+void handle_error(int retval)
 {
-  printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
-  exit(1);
+	printf("PAPI error %d: %s\n", retval, PAPI_strerror(retval));
+	exit(1);
 }
 
-void init_papi() {
-  int retval = PAPI_library_init(PAPI_VER_CURRENT);
-  if (retval != PAPI_VER_CURRENT && retval < 0) {
-    printf("PAPI library version mismatch!\n");
-    exit(1);
-  }
-  if (retval < 0) handle_error(retval);
-
-  std::cout << "PAPI Version Number: MAJOR: " << PAPI_VERSION_MAJOR(retval)
-            << " MINOR: " << PAPI_VERSION_MINOR(retval)
-            << " REVISION: " << PAPI_VERSION_REVISION(retval) << "\n";
-}
-
-
-int main (int argc, char *argv[])
+void init_papi()
 {
+	int retval = PAPI_library_init(PAPI_VER_CURRENT);
+	if (retval != PAPI_VER_CURRENT && retval < 0)
+	{
+		printf("PAPI library version mismatch!\n");
+		exit(1);
+	}
+	if (retval < 0)
+		handle_error(retval);
 
-	char c;
-	int lin, col, blockSize;
-	int op;
-	
+	std::cout << "PAPI Version Number: MAJOR: " << PAPI_VERSION_MAJOR(retval)
+			  << " MINOR: " << PAPI_VERSION_MINOR(retval)
+			  << " REVISION: " << PAPI_VERSION_REVISION(retval) << "\n";
+}
+
+void printUsage(const string &programmName)
+{
+	std::cout << "Usage: " << programmName << " <op> <lin> <col> <output> [blockSize]" << endl
+			  << "  <op> 		: Opration mode: 1, 2, 3 (required)" << endl
+			  << "	<lin>		: Number of lines (required)" << endl
+			  << "	<col>		: Number of columns (required)" << endl
+			  << "	<output>	: Path to output filename (required)" << endl
+			  << "	[blockSize]	: Size of a block (optional)" << endl;
+}
+
+std::ofstream createFile(const string &fileName)
+{	
+	namespace fs = std::filesystem;
+
+	if (fs::exists(fileName)) {
+		std::ofstream file(fileName, std::ios::out | std::ios::app);
+		return file;
+	}
+
+	fs::path p(fileName);
+
+	if (!p.parent_path().empty())
+	{
+		std::error_code ec;
+		fs::create_directories(p.parent_path(), ec);
+	}
+
+	std::ofstream file(fileName, std::ios::out | std::ios::app);
+	file << "OPERATION_MODE,LIN,COL,BLOCK_SIZE,TIME,L1 DCM,L2 DCM" << endl;
+	return file;
+}
+
+int main(int argc, char *argv[])
+{
+	if (argc < 4 || argc > 5)
+	{
+		printUsage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	int op = std::atoi(argv[1]);
+	// TODO(mm): matrix sizes?
+	int lin = std::atoi(argv[2]);
+	int col = std::atoi(argv[3]);
+	int blockSize = op == 3 ? std::atoi(argv[5]) : 0;
+	double time = 0.0;
+	std::ofstream file = createFile(argv[4]);
+
 	int EventSet = PAPI_NULL;
-  	long long values[2];
-  	int ret;
-	
+	long long values[2];
+	int ret;
 
-	ret = PAPI_library_init( PAPI_VER_CURRENT );
-	if ( ret != PAPI_VER_CURRENT )
+	ret = PAPI_library_init(PAPI_VER_CURRENT);
+	if (ret != PAPI_VER_CURRENT)
 		std::cout << "FAIL" << endl;
 
-
 	ret = PAPI_create_eventset(&EventSet);
-		if (ret != PAPI_OK) cout << "ERROR: create eventset" << endl;
+	if (ret != PAPI_OK)
+		std::cout << "ERROR: create eventset" << endl;
 
+	ret = PAPI_add_event(EventSet, PAPI_L1_DCM);
+	if (ret != PAPI_OK)
+		std::cout << "ERROR: PAPI_L1_DCM" << endl;
 
-	ret = PAPI_add_event(EventSet,PAPI_L1_DCM );
-	if (ret != PAPI_OK) cout << "ERROR: PAPI_L1_DCM" << endl;
+	ret = PAPI_add_event(EventSet, PAPI_L2_DCM);
+	if (ret != PAPI_OK)
+		std::cout << "ERROR: PAPI_L2_DCM" << endl;
 
+	ret = PAPI_start(EventSet);
+	if (ret != PAPI_OK)
+		std::cout << "ERROR: Start PAPI" << endl;
 
-	ret = PAPI_add_event(EventSet,PAPI_L2_DCM);
-	if (ret != PAPI_OK) cout << "ERROR: PAPI_L2_DCM" << endl;
+	switch (op)
+	{
+	case 1:
+		time = OnMult(lin, col, lin);
+		break;
+	case 2:
+		time = OnMultLine(lin, col, lin);
+		break;
+	case 3:
+		time = OnMult(lin, col, lin);
+		// OnMultBlock(lin, col, blockSize);
+		break;
+	default:
+		printUsage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
 
+	ret = PAPI_stop(EventSet, values);
+	if (ret != PAPI_OK)
+		std::cout << "ERROR: Stop PAPI" << endl;
 
-	op=1;
-	do {
-		cout << endl << "1. Multiplication" << endl;
-		cout << "2. Line Multiplication" << endl;
-		cout << "3. Block Multiplication" << endl;
-		cout << "Selection?: ";
-		cin >>op;
-		if (op == 0)
-			break;
-		printf("Dimensions: lins=cols ? ");
-   		cin >> lin;
-   		col = lin;
+	file << op << ','
+		 << lin << ','
+		 << col << ','
+		 << blockSize << ','
+		 << time << ','
+		 << values[0] << ','
+		 << values[1] << endl;
 
+	file.close();
+	printf("L1 DCM: %lld \n", values[0]);
+	printf("L2 DCM: %lld \n", values[1]);
 
-		// Start counting
-		ret = PAPI_start(EventSet);
-		if (ret != PAPI_OK) cout << "ERROR: Start PAPI" << endl;
+	ret = PAPI_reset(EventSet);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL reset" << endl;
 
-		switch (op){
-			case 1: 
-				OnMult(lin, col);
-				break;
-			case 2:
-				OnMultLine(lin, col);  
-				break;
-			case 3:
-				cout << "Block Size? ";
-				cin >> blockSize;
-				OnMultBlock(lin, col, blockSize);  
-				break;
+	ret = PAPI_remove_event(EventSet, PAPI_L1_DCM);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL remove event" << endl;
 
-		}
+	ret = PAPI_remove_event(EventSet, PAPI_L2_DCM);
+	if (ret != PAPI_OK)
+		std::cout << "FAIL remove event" << endl;
 
-  		ret = PAPI_stop(EventSet, values);
-  		if (ret != PAPI_OK) cout << "ERROR: Stop PAPI" << endl;
-  		printf("L1 DCM: %lld \n",values[0]);
-  		printf("L2 DCM: %lld \n",values[1]);
-
-		ret = PAPI_reset( EventSet );
-		if ( ret != PAPI_OK )
-			std::cout << "FAIL reset" << endl; 
-
-
-
-	}while (op != 0);
-
-	ret = PAPI_remove_event( EventSet, PAPI_L1_DCM );
-	if ( ret != PAPI_OK )
-		std::cout << "FAIL remove event" << endl; 
-
-	ret = PAPI_remove_event( EventSet, PAPI_L2_DCM );
-	if ( ret != PAPI_OK )
-		std::cout << "FAIL remove event" << endl; 
-
-	ret = PAPI_destroy_eventset( &EventSet );
-	if ( ret != PAPI_OK )
+	ret = PAPI_destroy_eventset(&EventSet);
+	if (ret != PAPI_OK)
 		std::cout << "FAIL destroy" << endl;
 
+	return 0;
 }
