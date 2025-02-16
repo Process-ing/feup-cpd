@@ -120,10 +120,8 @@ double OnMultLine(int m_ar, int m_br, int m_cr)
 		for (k = 0; k < m_br; k++)
 		{
 			// TODO (Process-ing): Remove temporary variable (maybe?)
-			temp = 0;
 			for (j = 0; j < m_cr; j++)
-				temp += pha[i * m_br + k] * phb[k * m_cr + j];
-			phc[i * m_cr + j] = temp;
+				phc[i * m_cr + j] += pha[i * m_br + k] * phb[k * m_cr + j];
 		}
 	}
 
