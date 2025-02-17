@@ -16,7 +16,7 @@ using namespace std;
 
 double *init_array(int m, int n, bool fill)
 {
-	double *mat = (double *)malloc((m * n) * sizeof(double));
+	double *mat = (double *)calloc(m * n, sizeof(double));
 	if (mat == NULL)
 	{
 		perror("Error in init_array");
@@ -62,6 +62,7 @@ double OnMult(int m_ar, int m_br, int m_cr)
 
 	double *pha, *phb, *phc;
 
+	// TODO(mm): Move to main? PAPI will start count here.
 	pha = init_array(m_ar, m_br, true);
 	phb = init_array(m_br, m_cr, true);
 	phc = init_array(m_ar, m_cr, false);
@@ -93,10 +94,9 @@ double OnMult(int m_ar, int m_br, int m_cr)
 	free(phb);
 	free(phc);
 
-	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC;  // in milliseconds
+	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC; // in milliseconds
 }
 
-// add code here for line x line matrix multiplication
 double OnMultLine(int m_ar, int m_br, int m_cr)
 {
 	SYSTEMTIME Time1, Time2;
@@ -136,12 +136,86 @@ double OnMultLine(int m_ar, int m_br, int m_cr)
 	free(phb);
 	free(phc);
 
-	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC;  // in milliseconds
+	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC; // in milliseconds
 }
 
-// add code here for block x block matrix multiplication
-void OnMultBlock(int m_ar, int m_br, int bkSize)
+double OnMultBlock(int m_ar, int m_br, int m_cr, int bkSize)
 {
+	SYSTEMTIME Time1, Time2;
+
+	double temp;
+	int I, J, K, i, j, k;
+
+	if (m_ar % bkSize != 0 || m_br % bkSize != 0 || m_cr % bkSize != 0)
+		return -1.0;
+
+	double *pha, *phb, *phc;
+
+	pha = init_array(m_ar, m_br, true);
+	phb = init_array(m_br, m_cr, true);
+	phc = init_array(m_ar, m_cr, false);
+
+	if (pha == NULL || phb == NULL || phc == NULL)
+		return -1.0;
+
+	Time1 = clock();
+
+	// TODO(mm): use for loops from OmMultLine?
+	for (I = 0; I < m_ar; I += bkSize)
+	{
+		for (J = 0; J < m_cr; J += bkSize)
+		{
+			for (K = 0; K < m_br; K += bkSize)
+			{
+				for (i = I; i < I + bkSize; i++)
+				{
+					for (j = J; j < J + bkSize; j++)
+					{
+						temp = 0;
+						for (k = K; k < K + bkSize; k++)
+						{
+							temp += pha[i * m_br + k] * phb[k * m_cr + j];
+						}
+						phc[i * m_cr + j] += temp;
+					}
+				}
+			}
+		}
+	}
+
+	// But It's Honest Work
+	// int a_bk = m_ar / bkSize, b_bk = m_br / bkSize, c_bk = m_cr / bkSize;
+	// for (int a = 0; a < a_bk; a++)
+	// {
+	// 	for (int b = 0; b < b_bk; b++)
+	// 	{
+	// 		for (int c = 0; c < c_bk; c++)
+	// 		{
+	// 			for (i = 0; i < bkSize; i++)
+	// 			{
+	// 				for (j = 0; j < bkSize; j++)
+	// 				{
+	// 					temp = 0;
+	// 					for (k = 0; k < bkSize; k++)
+	// 						temp += pha[(a * bkSize + i) * m_br + c * bkSize + k] * phb[(k + c * bkSize) * m_cr + b * bkSize + j];
+	// 					phc[(i + a * bkSize) * m_cr + b * bkSize + j] += temp;
+	// 				}
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+	Time2 = clock();
+	print_time_diff(Time1, Time2);
+
+	cout << "Result matrix: " << endl;
+	print_first_elems(phc, m_ar, m_cr);
+
+	free(pha);
+	free(phb);
+	free(phc);
+
+	return (double)(Time2 - Time1) * 1000 / CLOCKS_PER_SEC; // in milliseconds
 }
 
 void handle_error(int retval)
@@ -177,10 +251,11 @@ void printUsage(const string &programmName)
 }
 
 std::ofstream createFile(const string &fileName)
-{	
+{
 	namespace fs = std::filesystem;
 
-	if (fs::exists(fileName)) {
+	if (fs::exists(fileName))
+	{
 		std::ofstream file(fileName, std::ios::out | std::ios::app);
 		return file;
 	}
@@ -200,7 +275,7 @@ std::ofstream createFile(const string &fileName)
 
 int main(int argc, char *argv[])
 {
-	if (argc < 4 || argc > 5)
+	if (argc < 5 || argc > 6)
 	{
 		printUsage(argv[0]);
 		exit(EXIT_FAILURE);
@@ -247,7 +322,7 @@ int main(int argc, char *argv[])
 		time = OnMultLine(lin, col, lin);
 		break;
 	case 3:
-		time = OnMult(lin, col, lin);
+		time = OnMultBlock(lin, col, lin, blockSize);
 		// OnMultBlock(lin, col, blockSize);
 		break;
 	default:
