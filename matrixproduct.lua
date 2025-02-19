@@ -70,8 +70,28 @@ local function on_mult_line(m, n, p)
     print_first_elems(mat_c, n, p);
 end
 
-local function on_mult_block(m, n, p)
-    error("Not implemented")
+local function on_mult_block(m, n, p, blockSize)
+    local mat_a = init_array(m, n, true)
+    local mat_b = init_array(n, p, true)
+    local mat_c = init_array(m, p, false)
+
+    for row = 0, math.ceil(m / blockSize) - 1 do
+        for col = 0, math.ceil(p / blockSize) - 1 do
+            for i = row * blockSize, math.min((row + 1) * blockSize, m) - 1 do
+                for k = 0, n - 1 do
+                    for j = col * blockSize, math.min((col + 1) * blockSize, p) - 1 do
+                        if mat_b[k * p + j + 1] == nil then
+                            print(i, j, k, n * p, k * p + j + 1)
+                        end
+                        mat_c[i * p + j + 1] = mat_c[i * p + j + 1] + mat_a[i * n + k + 1] * mat_b[k * p + j + 1];
+                    end
+                end
+            end
+        end
+    end
+
+    print("Result matrix:")
+    print_first_elems(mat_c, n, p);
 end
 
 local function print_usage()
@@ -111,7 +131,7 @@ local function main()
     elseif op == 2 then
         time = time_func(function () on_mult_line(line, col, line) end)
     elseif op == 3 then
-        time = time_func(function () on_mult_block(line, col, line) end)
+        time = time_func(function () on_mult_block(line, col, line, block_size) end)
     else
         print_usage()
         return
