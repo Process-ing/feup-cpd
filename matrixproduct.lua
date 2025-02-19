@@ -1,8 +1,16 @@
-local function init_array(m, n)
+local function init_array(m, n, fill)
     local mat = {}
+
+    local fill_func;
+    if fill then
+        fill_func = function (i, j) return i + j - 1 end
+    else
+        fill_func = function (i, j) return 0 end
+    end
+
     for i = 1, m do
         for j = 1, n do
-            table.insert(mat, i + j - 1);
+            table.insert(mat, fill_func(i, j));
         end
     end
 
@@ -27,9 +35,9 @@ end
 local function on_mult(m, n, p)
     local temp
     
-    local mat_a = init_array(m, n)
-    local mat_b = init_array(n, p)
-    local mat_c = {}
+    local mat_a = init_array(m, n, true)
+    local mat_b = init_array(n, p, true)
+    local mat_c = init_array(m, p, false)
 
     for i = 0, m - 1 do
         for j = 0, p - 1 do
@@ -37,7 +45,7 @@ local function on_mult(m, n, p)
             for k = 0, n - 1 do
                 temp = temp + mat_a[i * n + k + 1] * mat_b[k * p + j + 1];
             end
-            table.insert(mat_c, temp)
+            mat_c[i * p + j + 1] = temp
         end
     end
 
@@ -46,7 +54,20 @@ local function on_mult(m, n, p)
 end
 
 local function on_mult_line(m, n, p)
-    error("Not implemented")
+    local mat_a = init_array(m, n, true)
+    local mat_b = init_array(n, p, true)
+    local mat_c = init_array(m, p, false)
+
+    for i = 0, m - 1 do
+        for k = 0, n - 1 do
+            for j = 0, p - 1 do
+                mat_c[i * p + j + 1] = mat_c[i * p + j + 1] + mat_a[i * n + k + 1] * mat_b[k * p + j + 1];
+            end
+        end
+    end
+
+    print("Result matrix:")
+    print_first_elems(mat_c, n, p);
 end
 
 local function on_mult_block(m, n, p)
@@ -74,8 +95,8 @@ local function main()
         return
     end
 
-    local line = math.tointeger(arg[2])
-    local col = math.tointeger(arg[3])
+    local line = tonumber(arg[2])
+    local col = tonumber(arg[3])
     local filename = arg[4]
     local block_size = tonumber(arg[5]);
 
