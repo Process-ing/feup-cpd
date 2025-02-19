@@ -103,6 +103,25 @@ local function print_usage()
     print("  [blockSize]: Size of a block (optional)")
 end
 
+local function open_file(filename)
+    local file = io.open(filename, "r")
+    if file ~= nil then
+        file:close()
+        file = io.open(filename, "a")
+        if file == nil then
+            error("Failed to open file")
+        end
+    else
+        file = io.open(filename, "w")
+        if file == nil then
+            error("Failed to create file")
+        end
+        file:write("OPERATION_MODE,LIN,COL,BLOCK_SIZE,TIME\n")
+    end
+
+    return file
+end
+
 local function main()
     if #arg < 4 or #arg > 5 then
         print_usage()
@@ -118,6 +137,7 @@ local function main()
     local line = tonumber(arg[2])
     local col = tonumber(arg[3])
     local filename = arg[4]
+    local file = open_file(filename)
     local block_size = tonumber(arg[5]);
 
     if line == nil or col == nil or (op == 3 and block_size == nil) then
@@ -138,6 +158,7 @@ local function main()
     end
 
     print("Time:", time, "ms")
+    file:write(table.concat({op, line, col, block_size, time}, ",") .. "\n")
 end
 
 main()
