@@ -17,18 +17,14 @@ public class Guest implements Client {
         this.thread = thread;
     }
 
-    @Override
-    public Optional<ProtocolUnit> handle(ProtocolUnit unit) {
-        return Optional.of(new ErrUnit(ProtocolErrorIdentifier.COMMAND));
-    }
-
     public Optional<ProtocolUnit> handle(LoginUnit unit) {
         AuthDb authDb = thread.getServer().geAuthDb();
 
-        if (!authDb.login(unit.user(), unit.pass()))
-            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.FAILED_LOGIN));
+        var loggedUser = authDb.login(unit.user(), unit.pass());
+        if (loggedUser.isEmpty())
+            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
 
-        thread.setClient(new User(unit.user()));
+        thread.setClient(loggedUser.get());
 
         return Optional.empty();
     }
@@ -36,11 +32,18 @@ public class Guest implements Client {
     public Optional<ProtocolUnit> handle(RegisterUnit unit) {
         AuthDb authDb = thread.getServer().geAuthDb();
 
-        if (!authDb.register(unit.user(), unit.pass()))
-            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.FAILED_REGISTER));
+        var newUser = authDb.register(unit.user(), unit.pass());
+        if (newUser.isEmpty())
+            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.REGISTER));
 
-        thread.setClient(new User(unit.user()));
+        thread.setClient(newUser.get());
 
         return Optional.empty();
+    }
+
+    @Override
+    public Optional<ProtocolUnit> handle(ProtocolUnit unit) {
+        // Default handler for unknown commands
+        return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNEXPECTED));
     }
 }

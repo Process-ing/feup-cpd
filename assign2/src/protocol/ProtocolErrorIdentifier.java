@@ -3,11 +3,11 @@ package protocol;
 import java.util.Optional;
 
 public enum ProtocolErrorIdentifier {
-    COMMAND,
-    PARAMS,
+    SYNTAX,
+    UNEXPECTED,
     ASYNC,
-    FAILED_LOGIN,
-    FAILED_REGISTER;
+    LOGIN,
+    REGISTER;
 
     private final String name;
 

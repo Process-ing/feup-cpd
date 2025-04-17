@@ -1,6 +1,10 @@
 package structs;
 
+import java.util.Optional;
+
+import server.client.User;
+
 public interface AuthDb {
-    boolean register(String user, String pass);
-    boolean login(String user, String pass);
+    Optional<User> register(String user, String pass);
+    Optional<User> login(String user, String pass);
 }

@@ -1,3 +1,3 @@
 package structs;
 
-public record Message(int id, String content) {}
+public record Message(int id, String username, String content) {}

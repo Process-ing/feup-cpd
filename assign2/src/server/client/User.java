@@ -2,6 +2,8 @@ package server.client;
 
 import java.util.Optional;
 
+import protocol.ProtocolErrorIdentifier;
+import protocol.unit.ErrUnit;
 import protocol.unit.ProtocolUnit;
 
 public class User implements Client {
@@ -17,7 +19,7 @@ public class User implements Client {
 
     @Override
     public Optional<ProtocolUnit> handle(ProtocolUnit unit) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'handle'");
+        // Default handler for unknown commands
+        return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNEXPECTED));
     }
 }
