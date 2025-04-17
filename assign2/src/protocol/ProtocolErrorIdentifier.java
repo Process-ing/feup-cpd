@@ -1,5 +1,7 @@
 package protocol;
 
+import java.util.Optional;
+
 public enum ProtocolErrorIdentifier {
     COMMAND,
     PARAMS,
@@ -13,5 +15,14 @@ public enum ProtocolErrorIdentifier {
 
     public String getName() {
         return name;
+    }
+
+    public static Optional<ProtocolErrorIdentifier> fromString(String name) {
+        for (var value: values()) {
+            if (value.name.equals(name))
+                return Optional.of(value);
+        }
+
+        return Optional.empty();
     }
 }
