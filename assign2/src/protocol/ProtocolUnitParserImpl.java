@@ -1,10 +1,18 @@
-package protocol.unit;
+package protocol;
 
 import java.util.List;
 import java.util.Map;
 
-import protocol.ProtocolErrorIdentifier;
-import protocol.ProtocolUtils;
+import protocol.unit.EnterUnit;
+import protocol.unit.ErrUnit;
+import protocol.unit.InvalidUnit;
+import protocol.unit.LeaveUnit;
+import protocol.unit.LoginUnit;
+import protocol.unit.LogoutUnit;
+import protocol.unit.OkUnit;
+import protocol.unit.ProtocolUnit;
+import protocol.unit.RegisterUnit;
+import protocol.unit.SendUnit;
 
 @FunctionalInterface
 interface ParseHandler {

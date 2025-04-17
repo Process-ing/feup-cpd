@@ -25,7 +25,8 @@ public class User extends Client {
         return name;
     }
 
-    public Optional<ProtocolUnit> handle(EnterUnit unit) {
+    @Override
+    public Optional<ProtocolUnit> visit(EnterUnit unit) {
         var thread = getThread();
         var server = thread.getServer();
 
@@ -48,17 +49,12 @@ public class User extends Client {
         return Optional.empty();
     }
 
-    public Optional<ProtocolUnit> handle(LogoutUnit unit) {
+    @Override
+    public Optional<ProtocolUnit> visit(LogoutUnit unit) {
         var thread = getThread();
 
         thread.setClient(new Guest(thread));
 
         return Optional.empty();
-    }
-
-    @Override
-    public Optional<ProtocolUnit> handle(ProtocolUnit unit) {
-        // Default handler for unknown commands
-        return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNEXPECTED));
     }
 }

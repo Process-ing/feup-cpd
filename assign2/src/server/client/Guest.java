@@ -15,7 +15,8 @@ public class Guest extends Client {
         super(thread);
     }
 
-    public Optional<ProtocolUnit> handle(LoginUnit unit) {
+    @Override
+    public Optional<ProtocolUnit> visit(LoginUnit unit) {
         var thread = getThread();
         var authDb = thread.getServer().geAuthDb();
 
@@ -28,7 +29,8 @@ public class Guest extends Client {
         return Optional.empty();
     }
 
-    public Optional<ProtocolUnit> handle(RegisterUnit unit) {
+    @Override
+    public Optional<ProtocolUnit> visit(RegisterUnit unit) {
         var thread = getThread();
         AuthDb authDb = thread.getServer().geAuthDb();
 
@@ -39,11 +41,5 @@ public class Guest extends Client {
         thread.setClient(newUser.get());
 
         return Optional.empty();
-    }
-
-    @Override
-    public Optional<ProtocolUnit> handle(ProtocolUnit unit) {
-        // Default handler for unknown commands
-        return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNEXPECTED));
     }
 }
