@@ -2,16 +2,23 @@ package protocol;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
-public class ProtocolHandler {
-    private Map<String, Function<TokenList, Boolean>> handlers;
+@FunctionalInterface
+interface Handler<T> {
+    boolean apply(T entity, TokenList list);
+}
+
+public abstract class ProtocolHandler<T> {
+    private Map<String, Handler<T>> handlers;
 
     public ProtocolHandler() {
         this.handlers = new HashMap<>();
+        addHandlers();
     }
 
-    public void addHandler(String command, Function<TokenList, Boolean> handler) {
+    protected abstract void addHandlers();
+
+    protected void addHandler(String command, Handler<T> handler) {
         handlers.put(command, handler);
     }
 
@@ -19,8 +26,8 @@ public class ProtocolHandler {
         return false;
     }
 
-    public boolean handle(TokenList list) {
+    public boolean handle(T entity, TokenList list) {
         var handler = handlers.get(list.getCommand());
-        return handler != null ? handler.apply(list) : defaultHandler(list);
+        return handler != null ? handler.apply(entity, list) : defaultHandler(list);
     }
 }
