@@ -1,5 +1,5 @@
 package server.client;
 
-public interface Client {
+import protocol.ProtocolHandler;
 
-}
+public interface Client extends ProtocolHandler {}
