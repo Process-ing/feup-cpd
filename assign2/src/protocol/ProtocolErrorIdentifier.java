@@ -8,6 +8,7 @@ public enum ProtocolErrorIdentifier {
     ASYNC,
     LOGIN,
     REGISTER,
+    UNAUTHORIZED,
     UNKNOWN;
 
     private final String name;
