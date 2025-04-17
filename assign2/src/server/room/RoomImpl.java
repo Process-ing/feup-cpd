@@ -38,7 +38,7 @@ public class RoomImpl implements Room {
         if (currentUser != null)
             return Optional.of(currentUser);
 
-        var newUser = new RoomUser(user.getName(), this);
+        var newUser = new RoomUser(user.getThread(), user.getName(), this);
         userMap.put(newUser.getName(), newUser);
         return Optional.of(newUser);
 
@@ -51,7 +51,7 @@ public class RoomImpl implements Room {
         if (removedUser == null)
             return Optional.empty();
 
-        var newUser = new User(user.getName());
+        var newUser = new User(user.getThread(), user.getName());
         return Optional.of(newUser);
     }
 

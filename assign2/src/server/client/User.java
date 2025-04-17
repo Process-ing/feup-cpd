@@ -5,11 +5,14 @@ import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.ErrUnit;
 import protocol.unit.ProtocolUnit;
+import server.ClientThread;
 
-public class User implements Client {
+public class User extends Client {
     private final String name;
 
-    public User(String name) {
+    public User(ClientThread thread, String name) {
+        super(thread);
+        
         this.name = name;
     }
 

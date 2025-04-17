@@ -10,15 +10,14 @@ import protocol.unit.RegisterUnit;
 import server.ClientThread;
 import structs.AuthDb;
 
-public class Guest implements Client {
-    private final ClientThread thread;
-
+public class Guest extends Client {
     public Guest(ClientThread thread) {
-        this.thread = thread;
+        super(thread);
     }
 
     public Optional<ProtocolUnit> handle(LoginUnit unit) {
-        AuthDb authDb = thread.getServer().geAuthDb();
+        var thread = getThread();
+        var authDb = thread.getServer().geAuthDb();
 
         var loggedUser = authDb.login(unit.user(), unit.pass());
         if (loggedUser.isEmpty())
@@ -30,6 +29,7 @@ public class Guest implements Client {
     }
 
     public Optional<ProtocolUnit> handle(RegisterUnit unit) {
+        var thread = getThread();
         AuthDb authDb = thread.getServer().geAuthDb();
 
         var newUser = authDb.register(unit.user(), unit.pass());
