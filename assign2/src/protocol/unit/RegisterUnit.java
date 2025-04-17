@@ -1,3 +1,8 @@
 package protocol.unit;
 
-public record RegisterUnit(String user, String pass) implements ProtocolUnit {}
+public record RegisterUnit(String user, String pass) implements ProtocolUnit {
+    @Override
+    public String serialize() {
+        return String.format("register %s %s", user, pass);
+    }
+}

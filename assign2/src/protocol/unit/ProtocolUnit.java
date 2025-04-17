@@ -1,3 +1,5 @@
 package protocol.unit;
 
-public interface ProtocolUnit {}
+public interface ProtocolUnit {
+    String serialize();
+}

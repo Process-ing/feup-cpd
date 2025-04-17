@@ -1,3 +1,10 @@
 package protocol.unit;
 
-public record SendUnit(String message) implements ProtocolUnit {}
+import protocol.ProtocolUtils;
+
+public record SendUnit(String message) implements ProtocolUnit {
+    @Override
+    public String serialize() {
+        return String.format("send %s", ProtocolUtils.escapeToken(message));
+    }
+}
