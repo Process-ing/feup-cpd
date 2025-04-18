@@ -4,10 +4,10 @@ import java.util.Optional;
 
 import protocol.ProtocolVisitor;
 
-public record InvalidUnit() implements ProtocolUnit {
+public record EofUnit() implements ProtocolUnit {
     @Override
     public String serialize() {
-        throw new UnsupportedOperationException("Cannot serialize invalid protocol unit");
+        throw new UnsupportedOperationException("Cannot serialize EOF protocol unit");
     }
 
     @Override

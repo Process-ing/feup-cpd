@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import protocol.unit.EnterUnit;
+import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.LeaveUnit;
@@ -19,10 +20,10 @@ interface ParseHandler {
     ProtocolUnit apply(List<String> tokens);
 }
 
-public class ProtocolUnitParserImpl implements ProtocolUnitParser {
+public class ProtocolParserImpl implements ProtocolParser {
     private final Map<String, ParseHandler> handlerMap;
 
-    public ProtocolUnitParserImpl() {
+    public ProtocolParserImpl() {
         this.handlerMap = Map.ofEntries(
             Map.entry("login", this::buildLogin),
             Map.entry("register", this::buildRegister),
@@ -37,11 +38,14 @@ public class ProtocolUnitParserImpl implements ProtocolUnitParser {
 
     @Override
     public ProtocolUnit parse(String string) {
+        if (string == null || string.isEmpty())
+            return new EofUnit();
+
         string = string.strip();
 
         var firstSpaceIndex = string.indexOf(' ');
         if (firstSpaceIndex == -1)
-            return new InvalidUnit();
+            firstSpaceIndex = string.length();
 
         var command = string.substring(0, firstSpaceIndex);
         var handler = handlerMap.get(command);

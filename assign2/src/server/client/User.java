@@ -57,4 +57,9 @@ public class User extends Client {
 
         return Optional.empty();
     }
+
+    @Override
+    public void cleanup() {
+        // No cleanup needed for user
+    }
 }

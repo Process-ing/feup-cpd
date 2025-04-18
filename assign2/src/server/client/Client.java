@@ -23,4 +23,6 @@ public abstract class Client implements DefaultProtocolVisitor {
     public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
         return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNEXPECTED));
     }
+
+    public abstract void cleanup();
 }

@@ -43,4 +43,9 @@ public class RoomUser extends Client {
         getThread().setClient(newUser.get());
         return Optional.empty();
     }
+
+    @Override
+    public void cleanup() {
+        room.disconnectUser(this);
+    }
 }

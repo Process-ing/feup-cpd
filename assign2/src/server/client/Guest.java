@@ -42,4 +42,9 @@ public class Guest extends Client {
 
         return Optional.empty();
     }
+
+    @Override
+    public void cleanup() {
+        // No cleanup needed for guest
+    }
 }

@@ -2,6 +2,6 @@ package protocol;
 
 import protocol.unit.ProtocolUnit;
 
-public interface ProtocolUnitParser {
+public interface ProtocolParser {
     ProtocolUnit parse(String string);
 }

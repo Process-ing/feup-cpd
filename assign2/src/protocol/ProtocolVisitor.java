@@ -13,4 +13,6 @@ public interface ProtocolVisitor {
     Optional<ProtocolUnit> visit(SendUnit unit);
     Optional<ProtocolUnit> visit(OkUnit unit);
     Optional<ProtocolUnit> visit(ErrUnit unit);
+    Optional<ProtocolUnit> visit(InvalidUnit unit);
+    Optional<ProtocolUnit> visit(EofUnit unit);
 }
