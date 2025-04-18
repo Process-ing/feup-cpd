@@ -100,11 +100,13 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildSend(List<String> tokens) {
-        if (tokens.size() != 1)
+        if (tokens.size() != 2)
             return new InvalidUnit();
 
-        String message = tokens.get(0);
-        return new SendUnit(message);
+        String username = tokens.get(0);
+        String message = tokens.get(1);
+
+        return new SendUnit(username, message);
     }
 
     private ProtocolUnit buildOk(List<String> tokens) {
