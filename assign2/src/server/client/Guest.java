@@ -18,9 +18,9 @@ public class Guest extends Client {
     @Override
     public Optional<ProtocolUnit> visit(LoginUnit unit) {
         var thread = getThread();
-        var authDb = thread.getServer().geAuthDb();
+        var authDb = thread.getServer().getAuthDb();
 
-        var loggedUser = authDb.login(unit.user(), unit.pass());
+        var loggedUser = authDb.login(unit.user(), unit.pass(), thread);
         if (loggedUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
 
@@ -32,9 +32,9 @@ public class Guest extends Client {
     @Override
     public Optional<ProtocolUnit> visit(RegisterUnit unit) {
         var thread = getThread();
-        AuthDb authDb = thread.getServer().geAuthDb();
+        AuthDb authDb = thread.getServer().getAuthDb();
 
-        var newUser = authDb.register(unit.user(), unit.pass());
+        var newUser = authDb.register(unit.user(), unit.pass(), thread);
         if (newUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.REGISTER));
 
