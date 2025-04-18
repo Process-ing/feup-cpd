@@ -5,11 +5,9 @@ import java.util.Optional;
 import protocol.DefaultProtocolVisitor;
 import protocol.unit.ProtocolUnit;
 
-public interface ClientState extends DefaultProtocolVisitor {
-    ClientState nextState();
-
+public abstract class ClientState implements DefaultProtocolVisitor {
     @Override
-    default Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
+    public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
         return Optional.empty();
     }
 }
