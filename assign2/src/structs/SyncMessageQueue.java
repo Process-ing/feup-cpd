@@ -1,17 +1,39 @@
 package structs;
 
 import java.util.Optional;
+import java.util.Queue;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class SyncMessageQueue implements MessageQueue {
+    private final Queue<Message> queue;
+    private final ReentrantLock lock;
+
+    public SyncMessageQueue(Queue<Message> queue) {
+        this.queue = queue;
+        this.lock = new ReentrantLock();
+    }
+
     @Override
     public void push(Message message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'push'");
+        lock.lock();
+        try {
+            queue.add(message);
+        } finally {
+            lock.unlock();
+        }
     }
 
     @Override
     public Optional<Message> pop() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pop'");
+        Message message;
+
+        lock.lock();
+        try {
+            message = queue.poll();
+        } finally {
+            lock.unlock();
+        }
+
+        return Optional.ofNullable(message);
     }
 }
