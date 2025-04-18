@@ -8,6 +8,8 @@ import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import server.ClientThread;
 import server.room.Room;
+import structs.Message;
+import structs.MessageQueue;
 
 public class RoomUser extends Client {
     private final String name;
@@ -30,7 +32,14 @@ public class RoomUser extends Client {
 
     @Override
     public Optional<ProtocolUnit> visit(SendUnit unit) {
-        room.addMessage(unit.message(), this);
+        Message message = room.addMessage(unit.message(), this);
+
+        for (RoomUser user: room.getOnlineUsers()) {
+            if (!name.equals(user.name)) {
+                MessageQueue userQueue = user.getThread().getMessageQueue();
+                userQueue.push(message);
+            }
+        }
         return Optional.empty();
     }
 

@@ -1,24 +1,27 @@
 package server;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
-import protocol.ProtocolParser;
 import protocol.ProtocolPort;
-import protocol.SocketProtocolPort;
 import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
+import protocol.unit.SendUnit;
 import server.client.Client;
+import structs.Message;
+import structs.MessageQueue;
 
 public class ClientThread {
-    private Socket socket;
     private final Server server;
+    private final ProtocolPort port;
+    private final MessageQueue queue;
     private Client client;
 
-    public ClientThread(Socket socket, Server server, Client client) {
-        this.socket = socket;
+    public ClientThread(Server server, ProtocolPort port, MessageQueue queue, Client client) {
         this.server = server;
+        this.port = port;
+        this.queue = queue;
         this.client = client;
     }
 
@@ -30,23 +33,35 @@ public class ClientThread {
         return client;
     }
 
+    public MessageQueue getMessageQueue() {
+        return queue;
+    }
+
     public void setClient(Client client) {
         this.client = client;
     }
 
     public void run() {
         try {
-            ProtocolParser parser = server.getParser();
-            ProtocolPort clientPort = new SocketProtocolPort(socket, parser);
-
             while (true) {
-                ProtocolUnit request = clientPort.receive();
-                if (request instanceof EofUnit)
+                Optional<Message> pendingMessage = queue.pop();
+                if (pendingMessage.isPresent()) {
+                    ProtocolUnit unit = new SendUnit(pendingMessage.get());
+                    port.send(unit);
+                    continue;
+                }
+
+                ProtocolUnit request = port.receive();
+                if (request instanceof EofUnit) {
+                    System.out.printf("[%s] EOF\n", LocalDateTime.now());
                     break;
+                } else {
+                    System.out.printf("[%s] %s\n", LocalDateTime.now(), request.serialize());
+                }
 
                 Optional<ProtocolUnit> response = request.accept(client);
                 if (response.isPresent())
-                    clientPort.send(response.get());
+                    port.send(response.get());
             }
 
         } catch (IOException e1) {
@@ -55,7 +70,7 @@ public class ClientThread {
             client.cleanup();
 
             try {
-                socket.close();
+                port.close();
             } catch (IOException e2) {
                 e2.printStackTrace();
             }

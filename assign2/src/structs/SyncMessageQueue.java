@@ -1,5 +1,8 @@
 package structs;
 
+import java.util.ArrayDeque;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.locks.ReentrantLock;
@@ -8,8 +11,12 @@ public class SyncMessageQueue implements MessageQueue {
     private final Queue<Message> queue;
     private final ReentrantLock lock;
 
-    public SyncMessageQueue(Queue<Message> queue) {
-        this.queue = queue;
+    public SyncMessageQueue() {
+        this(List.of());
+    }
+
+    public SyncMessageQueue(Collection<Message> queue) {
+        this.queue = new ArrayDeque<>(queue);
         this.lock = new ReentrantLock();
     }
 

@@ -6,14 +6,20 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
+import protocol.ProtocolPort;
+import protocol.SocketProtocolPort;
 import server.client.RoomUser;
+import server.client.User;
 import server.room.Room;
 import server.room.RoomImpl;
 import structs.AuthDb;
+import structs.MessageQueue;
 import structs.SyncAuthDb;
+import structs.SyncMessageQueue;
 
 public class Server {
     private final ServerSocket serverSocket;
@@ -52,9 +58,12 @@ public class Server {
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
-                ClientThread clientThread = new ClientThread(socket, null, null);
 
-                RoomUser user = new RoomUser(clientThread, "Guest", room);
+                ProtocolPort port = new SocketProtocolPort(socket, parser);
+                MessageQueue queue = new SyncMessageQueue();
+                ClientThread clientThread = new ClientThread(this, port, queue, null);
+
+                RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
                 clientThread.setClient(user);
 
                 Thread.ofVirtual().start(clientThread::run);
