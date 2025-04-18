@@ -36,7 +36,7 @@ public class RoomUser extends Client {
 
     @Override
     public Optional<ProtocolUnit> visit(LeaveUnit unit) {
-        var newUser = room.disconnectUser(this);
+        Optional<User> newUser = room.disconnectUser(this);
         if (newUser.isEmpty())
             throw new NotInRoomException();
 

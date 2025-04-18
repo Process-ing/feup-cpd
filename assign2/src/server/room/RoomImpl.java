@@ -34,11 +34,11 @@ public class RoomImpl implements Room {
 
     @Override
     public Optional<RoomUser> connectUser(User user) {
-        var currentUser = userMap.get(user.getName());
+        RoomUser currentUser = userMap.get(user.getName());
         if (currentUser != null)
             return Optional.of(currentUser);
 
-        var newUser = new RoomUser(user.getThread(), user.getName(), this);
+        RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this);
         userMap.put(newUser.getName(), newUser);
         return Optional.of(newUser);
 
@@ -47,11 +47,11 @@ public class RoomImpl implements Room {
 
     @Override
     public Optional<User> disconnectUser(RoomUser user) {
-        var removedUser = userMap.remove(user.getName());
+        RoomUser removedUser = userMap.remove(user.getName());
         if (removedUser == null)
             return Optional.empty();
 
-        var newUser = new User(user.getThread(), user.getName());
+        User newUser = new User(user.getThread(), user.getName());
         return Optional.of(newUser);
     }
 

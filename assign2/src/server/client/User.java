@@ -9,6 +9,7 @@ import protocol.unit.ErrUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.ProtocolUnit;
 import server.ClientThread;
+import server.Server;
 import server.room.Room;
 import server.room.RoomImpl;
 
@@ -27,10 +28,10 @@ public class User extends Client {
 
     @Override
     public Optional<ProtocolUnit> visit(EnterUnit unit) {
-        var thread = getThread();
-        var server = thread.getServer();
+        ClientThread thread = getThread();
+        Server server = thread.getServer();
 
-        var optRoom = server.getRoom(unit.roomName());
+        Optional<Room> optRoom = server.getRoom(unit.roomName());
         Room room;
 
         if (optRoom.isPresent()) {
@@ -41,7 +42,7 @@ public class User extends Client {
                 throw new RoomCreationException("Failed to assign room to server");
         }
 
-        var newUser = room.connectUser(this);
+        Optional<RoomUser> newUser = room.connectUser(this);
         if (newUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNAUTHORIZED));
 
@@ -51,7 +52,7 @@ public class User extends Client {
 
     @Override
     public Optional<ProtocolUnit> visit(LogoutUnit unit) {
-        var thread = getThread();
+        ClientThread thread = getThread();
 
         thread.setClient(new Guest(thread));
 

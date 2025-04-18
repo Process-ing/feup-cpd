@@ -2,6 +2,7 @@ package protocol;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
@@ -43,16 +44,16 @@ public class ProtocolParserImpl implements ProtocolParser {
 
         string = string.strip();
 
-        var firstSpaceIndex = string.indexOf(' ');
+        int firstSpaceIndex = string.indexOf(' ');
         if (firstSpaceIndex == -1)
             firstSpaceIndex = string.length();
 
-        var command = string.substring(0, firstSpaceIndex);
-        var handler = handlerMap.get(command);
+        String command = string.substring(0, firstSpaceIndex);
+        ParseHandler handler = handlerMap.get(command);
         if (handler == null)
             return new InvalidUnit();
 
-        var tokens = ProtocolUtils.tokenize(string.substring(firstSpaceIndex + 1));
+        List<String> tokens = ProtocolUtils.tokenize(string.substring(firstSpaceIndex + 1));
         return handler.apply(tokens);
     }
 
@@ -60,8 +61,8 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (tokens.size() != 2)
             return new InvalidUnit();
 
-        var user = tokens.get(0);
-        var pass = tokens.get(1);
+        String user = tokens.get(0);
+        String pass = tokens.get(1);
 
         return new LoginUnit(user, pass);
     }
@@ -70,8 +71,8 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (tokens.size() != 2)
             return new InvalidUnit();
 
-        var user = tokens.get(0);
-        var pass = tokens.get(1);
+        String user = tokens.get(0);
+        String pass = tokens.get(1);
 
         return new RegisterUnit(user, pass);
     }
@@ -86,7 +87,7 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (tokens.size() != 1)
             return new InvalidUnit();
 
-        var roomName = tokens.get(0);
+        String roomName = tokens.get(0);
 
         return new EnterUnit(roomName);
     }
@@ -102,7 +103,7 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (tokens.size() != 1)
             return new InvalidUnit();
 
-        var message = tokens.get(0);
+        String message = tokens.get(0);
         return new SendUnit(message);
     }
 
@@ -110,7 +111,7 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (tokens.size() != 1)
             return new InvalidUnit();
 
-        var data = tokens.get(0);
+        String data = tokens.get(0);
 
         return new OkUnit(data);
     }
@@ -119,7 +120,7 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (tokens.size() != 1)
             return new InvalidUnit();
 
-        var id = ProtocolErrorIdentifier.fromString(tokens.get(0));
+        Optional<ProtocolErrorIdentifier> id = ProtocolErrorIdentifier.fromString(tokens.get(0));
         if (id.isEmpty())
             return new InvalidUnit();
 

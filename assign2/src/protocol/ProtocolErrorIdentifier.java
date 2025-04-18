@@ -26,7 +26,7 @@ public enum ProtocolErrorIdentifier {
     }
 
     public static Optional<ProtocolErrorIdentifier> fromString(String name) {
-        for (var value: values()) {
+        for (ProtocolErrorIdentifier value: values()) {
             if (value.name.equals(name))
                 return Optional.of(value);
         }
