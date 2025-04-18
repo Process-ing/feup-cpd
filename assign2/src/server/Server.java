@@ -5,8 +5,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import protocol.ProtocolParser;
+import protocol.ProtocolParserImpl;
 import server.room.Room;
+import server.room.RoomImpl;
 import structs.AuthDb;
+import structs.SyncAuthDb;
 
 public class Server {
     private final AuthDb authDb;
@@ -19,7 +22,7 @@ public class Server {
         this.roomMap = new HashMap<>();
     }
 
-    public AuthDb geAuthDb() {
+    public AuthDb getAuthDb() {
         return authDb;
     }
 
@@ -33,5 +36,19 @@ public class Server {
 
     public boolean addRoom(Room room) {
         return roomMap.putIfAbsent(room.getName(), room) == null;
+    }
+
+    public static void main(String[] args) {
+        // TODO(Process-ing): Convert to real code
+        // Example usage
+        AuthDb authDb = new SyncAuthDb();
+        ProtocolParser parser = new ProtocolParserImpl();
+        Server server = new Server(authDb, parser);
+
+        // Add a room
+        Room room = new RoomImpl("Lobby");
+        server.addRoom(room);
+
+        
     }
 }
