@@ -3,8 +3,10 @@ package structs;
 import java.util.List;
 import java.util.Optional;
 
+import server.client.RoomUser;
+
 public interface MessageTable {
-    Message add(String username, String content);
+    Message add(RoomUser user, String content);
     Optional<Message> get(int id);
     List<Message> getAll();
 }

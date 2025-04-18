@@ -57,7 +57,7 @@ public class RoomImpl implements Room {
 
     @Override
     public Message addMessage(String content, RoomUser author) {
-        return messageTable.add(author.getName(), content);
+        return messageTable.add(author, content);
     }
 
     @Override
