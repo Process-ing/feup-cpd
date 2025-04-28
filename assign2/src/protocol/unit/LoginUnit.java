@@ -1,0 +1,17 @@
+package protocol.unit;
+
+import java.util.Optional;
+
+import protocol.ProtocolVisitor;
+
+public record LoginUnit(String user, String pass) implements ProtocolUnit {
+    @Override
+    public String serialize() {
+        return String.format("login %s %s", user, pass);
+    }
+
+    @Override
+    public Optional<ProtocolUnit> accept(ProtocolVisitor visitor) {
+        return visitor.visit(this);
+    }
+}
