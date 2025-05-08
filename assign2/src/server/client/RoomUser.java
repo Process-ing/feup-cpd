@@ -3,6 +3,7 @@ package server.client;
 import exception.NotInRoomException;
 import java.util.Optional;
 import protocol.unit.LeaveUnit;
+import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import server.ClientThread;
@@ -49,7 +50,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(newUser.get());
-        return Optional.empty();
+        return Optional.of(new OkUnit("You have left the room"));
     }
 
     @Override

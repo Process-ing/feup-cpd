@@ -1,8 +1,9 @@
 package client.state;
 
-import java.util.Optional;
-
 import client.Client;
+import java.util.Optional;
+import protocol.unit.LeaveUnit;
+import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 
@@ -23,6 +24,24 @@ public class RoomState extends ClientState {
 
     public String getRoomName() {
         return roomName;
+    }
+
+    @Override
+    public Optional<ProtocolUnit> visit(OkUnit unit) {
+        Client client = this.getClient();
+        ProtocolUnit previousUnit = client.getPreviousUnit();
+
+        switch (previousUnit) {
+            case LeaveUnit leaveUnit -> {
+                System.out.println("Left room: " + roomName);
+                client.setState(new AuthenticatedState(client, username));
+            }
+            default -> {
+                
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override
