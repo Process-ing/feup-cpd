@@ -1,8 +1,7 @@
 package server.client;
 
-import java.util.Optional;
-
 import exception.NotInRoomException;
+import java.util.Optional;
 import protocol.unit.LeaveUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;

@@ -14,6 +14,7 @@ import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
+import protocol.unit.SendUnit;
 import structs.Message;
 
 public class Client {
@@ -21,6 +22,7 @@ public class Client {
     private ClientState state;
     private final List<Message> messages;
     private final ProtocolParser parser;
+    private ProtocolUnit previousUnit;
 
     public Client(ProtocolPort port, ClientState initState, ProtocolParser parser) {
         this(port, initState, List.of(), parser);
@@ -32,6 +34,11 @@ public class Client {
         this.state.setClient(this);
         this.messages = new ArrayList<>(messages);
         this.parser = parser;
+        this.previousUnit = null;
+    }
+
+    public ProtocolUnit getPreviousUnit() {
+        return previousUnit;
     }
 
     public ClientState getState() {
@@ -56,6 +63,11 @@ public class Client {
                         String input = scanner.nextLine();
                         ProtocolUnit unit = parser.parse(input);
                         port.send(unit);
+                        if (unit instanceof SendUnit sendUnit) {
+                            System.out.printf("You# %s\n", sendUnit.message());
+                        }
+
+                        previousUnit = unit;
                     } catch (Exception e) {
                         System.out.println("Unexpected error: " + e.getMessage());
                     }

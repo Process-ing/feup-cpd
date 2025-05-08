@@ -4,6 +4,7 @@ import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.ErrUnit;
 import protocol.unit.LoginUnit;
+import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RegisterUnit;
 import server.ClientThread;
@@ -26,7 +27,7 @@ public class Guest extends Client {
         thread.setClient(loggedUser.get());
 
         // This will be changed to send a token to the client
-        return Optional.empty();
+        return Optional.of(new OkUnit("<token>"));
     }
 
     @Override
@@ -41,7 +42,7 @@ public class Guest extends Client {
         thread.setClient(newUser.get());
 
         // This will be changed to send a token to the client
-        return Optional.empty();
+        return Optional.of(new OkUnit("<token>"));
     }
 
     @Override

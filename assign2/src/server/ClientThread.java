@@ -3,7 +3,6 @@ package server;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
-
 import protocol.ProtocolPort;
 import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
@@ -42,15 +41,22 @@ public class ClientThread {
     }
 
     public void run() {
+        Thread.ofVirtual().start(() -> {
+            try {
+                while (true) {
+                    Optional<Message> pendingMessage = queue.pop();
+                    if (pendingMessage.isPresent()) {
+                        ProtocolUnit unit = new SendUnit(pendingMessage.get());
+                        port.send(unit);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
         try {
             while (true) {
-                Optional<Message> pendingMessage = queue.pop();
-                if (pendingMessage.isPresent()) {
-                    ProtocolUnit unit = new SendUnit(pendingMessage.get());
-                    port.send(unit);
-                    continue;
-                }
-
                 ProtocolUnit request = port.receive();
                 if (request instanceof EofUnit) {
                     System.out.printf("[%s] EOF\n", LocalDateTime.now());
