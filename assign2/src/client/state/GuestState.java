@@ -28,6 +28,7 @@ public class GuestState extends ClientState {
                 client.setState(new AuthenticatedState(client, registerUnit.user()));
             }
             default -> {
+                // No other actions should be possible in this state
             }
         }
 

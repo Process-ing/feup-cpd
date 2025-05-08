@@ -35,6 +35,7 @@ public class AuthenticatedState extends ClientState {
                 client.setState(new GuestState(client));
             }
             default -> {
+                // No other actions should be possible in this state
             }
         }
 
