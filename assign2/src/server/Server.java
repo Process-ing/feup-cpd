@@ -72,7 +72,7 @@ public class Server {
                 RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
                 clientThread.setClient(user);
 
-                Thread.ofVirtual().start(clientThread::run);
+                clientThread.start();
             }
         } catch (Exception e) {
             e.printStackTrace();
