@@ -1,5 +1,6 @@
 package client;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -94,6 +95,15 @@ public class Client {
     }
 
 
+    private static String getFileData(String fileName) {
+        try (FileInputStream inputStream = new FileInputStream(fileName)) {
+            return new String(inputStream.readAllBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private static Socket getSocket(InetAddress address, int portNumber, String password) throws IOException {
         System.setProperty("javax.net.ssl.trustStore", "client.truststore");
         System.setProperty("javax.net.ssl.trustStorePassword", password);
@@ -107,9 +117,11 @@ public class Client {
 
     public static void main(String[] args) {
         // TODO(Process-ing): Replace with real code
+        String passwordFile = "client-pass.txt";
 
         int portNumber = 12345;  // TODO(Process-ing): Get from args
-        String password = "password";  // TODO(Process-ing): Get from args
+
+        String password = getFileData(passwordFile);
 
         ProtocolParser parser = new ProtocolParserImpl();
 

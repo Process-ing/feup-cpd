@@ -58,6 +58,8 @@ public class Server {
 
     public void run() {
         // TODO(Process-ing): Convert to real code
+        System.out.println("Server started!");
+
         Room room = new RoomImpl("Lobby");
         addRoom(room);
 
@@ -80,6 +82,15 @@ public class Server {
     }
 
 
+    private static String getFileData(String fileName) {
+        try (FileInputStream inputStream = new FileInputStream(fileName)) {
+            return new String(inputStream.readAllBytes());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     private static SSLServerSocket getServerSocket(int port, char[] password) throws Exception {
         KeyStore keyStore = KeyStore.getInstance("JKS");
         try (FileInputStream keyStoreStream = new FileInputStream("server.keystore")) {
@@ -100,8 +111,11 @@ public class Server {
     }
 
     public static void main(String[] args) {
+        String passwordFile = "server-pass.txt";
+
         int port = 12345; // TODO(Process-ing): Get from args
-        char[] password = "password".toCharArray(); // TODO(Process-ing): Get from args
+
+        char[] password = getFileData(passwordFile).toCharArray();
 
         ServerSocket serverSocket;
         try {
