@@ -2,6 +2,7 @@ package client;
 
 import client.state.ClientState;
 import client.state.GuestState;
+import client.state.RoomState;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -13,6 +14,7 @@ import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import protocol.unit.EofUnit;
+import protocol.unit.InvalidUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import structs.Message;
@@ -61,13 +63,26 @@ public class Client {
                 while (true) {
                     try {
                         String input = scanner.nextLine();
-                        ProtocolUnit unit = parser.parse(input);
-                        port.send(unit);
-                        if (unit instanceof SendUnit sendUnit) {
-                            System.out.printf("You# %s\n", sendUnit.message());
+                        ProtocolUnit request = null;
+        
+                        if (input.startsWith("/")) {
+                            request = parser.parse(input.substring(1));
+                        } else if (state instanceof RoomState roomState) {
+                            request = new SendUnit(roomState.getUsername(), input);
                         }
-
-                        previousUnit = unit;
+        
+                        if (request == null || request instanceof InvalidUnit) {
+                            System.out.println("Invalid command");
+                            continue;
+                        }
+        
+                        port.send(request);
+        
+                        if (request instanceof SendUnit sendUnit) {
+                            System.out.printf("You# %s\n", sendUnit.message());
+                            continue;
+                        }
+                        previousUnit = request;
                     } catch (Exception e) {
                         System.out.println("Unexpected error: " + e.getMessage());
                     }
