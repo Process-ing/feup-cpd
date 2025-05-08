@@ -1,7 +1,6 @@
 package server.client;
 
 import java.util.Optional;
-
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.ErrUnit;
 import protocol.unit.LoginUnit;
@@ -26,6 +25,7 @@ public class Guest extends Client {
 
         thread.setClient(loggedUser.get());
 
+        // This will be changed to send a token to the client
         return Optional.empty();
     }
 
@@ -40,6 +40,7 @@ public class Guest extends Client {
 
         thread.setClient(newUser.get());
 
+        // This will be changed to send a token to the client
         return Optional.empty();
     }
 

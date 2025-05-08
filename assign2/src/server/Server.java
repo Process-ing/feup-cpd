@@ -6,16 +6,12 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Random;
-
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
-import server.client.RoomUser;
-import server.client.User;
+import server.client.Guest;
 import server.room.Room;
-import server.room.RoomImpl;
 import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
@@ -52,8 +48,8 @@ public class Server {
 
     public void run() {
         // TODO(Process-ing): Convert to real code
-        Room room = new RoomImpl("Lobby");
-        addRoom(room);
+        //Room room = new RoomImpl("Lobby");
+        //addRoom(room);
 
         try {
             while (true) {
@@ -63,7 +59,8 @@ public class Server {
                 MessageQueue queue = new SyncMessageQueue();
                 ClientThread clientThread = new ClientThread(this, port, queue, null);
 
-                RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
+                //RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
+                Guest user = new Guest(clientThread);
                 clientThread.setClient(user);
 
                 Thread.ofVirtual().start(clientThread::run);

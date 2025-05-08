@@ -1,37 +1,37 @@
 package client;
 
+import client.state.ClientState;
+import client.state.GuestState;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-
-import client.state.ClientState;
-import client.state.RoomState;
+import java.util.Scanner;
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.SendUnit;
 import structs.Message;
 
 public class Client {
     private final ProtocolPort port;
     private ClientState state;
     private final List<Message> messages;
+    private final ProtocolParser parser;
 
-    public Client(ProtocolPort port, ClientState initState) {
-        this(port, initState, List.of());
+    public Client(ProtocolPort port, ClientState initState, ProtocolParser parser) {
+        this(port, initState, List.of(), parser);
     }
 
-    public Client(ProtocolPort port, ClientState initState, List<Message> messages) {
+    public Client(ProtocolPort port, ClientState initState, List<Message> messages, ProtocolParser parser) {
         this.port = port;
         this.state = initState;
         this.state.setClient(this);
         this.messages = new ArrayList<>(messages);
+        this.parser = parser;
     }
 
     public ClientState getState() {
@@ -47,26 +47,25 @@ public class Client {
     }
 
     public void run() {
-        // TODO(Process-ing): Replace with real code
-        setState(new RoomState(this, "JohnDoe" + new Random().nextInt(), "Lobby"));
+        setState(new GuestState(this));
 
         Thread.ofVirtual().start(() -> {
-            int count = 1;
-            try {
+            try (Scanner scanner = new Scanner(System.in)) {
                 while (true) {
-                    String message = String.format("My message #%d", count);
-                    ProtocolUnit unit = new SendUnit(((RoomState) state).getUsername(), message);
-
-                    port.send(unit);
-                    System.out.printf("You# %s\n", message);
-                    Thread.sleep(1000);
-                    count++;
+                    try {
+                        String input = scanner.nextLine();
+                        ProtocolUnit unit = parser.parse(input);
+                        port.send(unit);
+                    } catch (Exception e) {
+                        System.out.println("Unexpected error: " + e.getMessage());
+                    }
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (Exception e) {
+                System.out.println("Unrecoverable error: " + e.getMessage());
             }
+            /* } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();*/
+            
         });
 
         try {
@@ -109,8 +108,8 @@ public class Client {
             return;
         }
 
-        ClientState initState = new RoomState(null, "JohnDoe", "Lobby");
-        Client client = new Client(port, initState);
+        ClientState initState = new GuestState(null);
+        Client client = new Client(port, initState, parser);
 
         client.run();
     }
