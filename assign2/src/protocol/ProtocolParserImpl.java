@@ -18,7 +18,7 @@ import protocol.unit.SendUnit;
 
 @FunctionalInterface
 interface ParseHandler {
-    ProtocolUnit apply(List<String> tokens);
+    ProtocolUnit apply(List<String> args);
 }
 
 public class ProtocolParserImpl implements ProtocolParser {
@@ -53,76 +53,77 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (handler == null)
             return new InvalidUnit();
 
-        List<String> tokens = ProtocolUtils.tokenize(string.substring(firstSpaceIndex + 1));
-        return handler.apply(tokens);
+        String argString = string.substring(firstSpaceIndex).strip();
+        List<String> args = ProtocolUtils.tokenize(argString);
+        return handler.apply(args);
     }
 
-    private ProtocolUnit buildLogin(List<String> tokens) {
-        if (tokens.size() != 2)
+    private ProtocolUnit buildLogin(List<String> args) {
+        if (args.size() != 2)
             return new InvalidUnit();
 
-        String user = tokens.get(0);
-        String pass = tokens.get(1);
+        String user = args.get(0);
+        String pass = args.get(1);
 
         return new LoginUnit(user, pass);
     }
 
-    private ProtocolUnit buildRegister(List<String> tokens) {
-        if (tokens.size() != 2)
+    private ProtocolUnit buildRegister(List<String> args) {
+        if (args.size() != 2)
             return new InvalidUnit();
 
-        String user = tokens.get(0);
-        String pass = tokens.get(1);
+        String user = args.get(0);
+        String pass = args.get(1);
 
         return new RegisterUnit(user, pass);
     }
 
-    private ProtocolUnit buildLogout(List<String> tokens) {
-        if (tokens.size() != 0)
+    private ProtocolUnit buildLogout(List<String> args) {
+        if (args.size() != 0)
             return new InvalidUnit();
         return new LogoutUnit();
     }
 
-    private ProtocolUnit buildEnter(List<String> tokens) {
-        if (tokens.size() != 1)
+    private ProtocolUnit buildEnter(List<String> args) {
+        if (args.size() != 1)
             return new InvalidUnit();
 
-        String roomName = tokens.get(0);
+        String roomName = args.get(0);
 
         return new EnterUnit(roomName);
     }
 
-    private ProtocolUnit buildLeave(List<String> tokens) {
-        if (tokens.size() != 0)
+    private ProtocolUnit buildLeave(List<String> args) {
+        if (args.size() != 0)
             return new InvalidUnit();
 
         return new LeaveUnit();
     }
 
-    private ProtocolUnit buildSend(List<String> tokens) {
-        if (tokens.size() != 2)
+    private ProtocolUnit buildSend(List<String> args) {
+        if (args.size() != 2)
             return new InvalidUnit();
 
-        String username = tokens.get(0);
-        String message = tokens.get(1);
+        String username = args.get(0);
+        String message = args.get(1);
 
         return new SendUnit(username, message);
     }
 
-    private ProtocolUnit buildOk(List<String> tokens) {
-        if (tokens.size() != 1)
+    private ProtocolUnit buildOk(List<String> args) {
+        if (args.size() != 1)
             return new InvalidUnit();
 
-        String data = tokens.get(0);
+        String data = args.get(0);
 
         return new OkUnit(data);
     }
 
-    private ProtocolUnit buildErr(List<String> tokens) {
-        if (tokens.size() != 1)
+    private ProtocolUnit buildErr(List<String> args) {
+        if (args.size() != 1)
             return new InvalidUnit();
 
-        Optional<ProtocolErrorIdentifier> id = ProtocolErrorIdentifier.fromString(tokens.get(0));
+        Optional<ProtocolErrorIdentifier> id = ProtocolErrorIdentifier.fromString(args.get(0));
         if (id.isEmpty())
             return new InvalidUnit();
 
