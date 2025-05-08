@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
 import client.state.ClientState;
 import client.state.RoomState;
 import protocol.ProtocolParser;
@@ -90,10 +93,24 @@ public class Client {
         }
     }
 
+
+    private static Socket getSocket(InetAddress address, int portNumber, String password) throws IOException {
+        System.setProperty("javax.net.ssl.trustStore", "client.truststore");
+        System.setProperty("javax.net.ssl.trustStorePassword", password);
+
+        SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
+        SSLSocket socket = (SSLSocket) socketFactory.createSocket(address, portNumber);
+
+        socket.startHandshake();
+        return socket;
+    }
+
     public static void main(String[] args) {
         // TODO(Process-ing): Replace with real code
 
         int portNumber = 12345;  // TODO(Process-ing): Get from args
+        String password = "password";  // TODO(Process-ing): Get from args
+
         ProtocolParser parser = new ProtocolParserImpl();
 
         InetAddress address;
@@ -102,7 +119,7 @@ public class Client {
 
         try {
             address = InetAddress.getLocalHost();  // TODO(Process-ing): Get from args
-            socket = new Socket(address, portNumber);
+            socket = getSocket(address, portNumber, password);
             port = new SocketProtocolPort(socket, parser);
         } catch (IOException e) {
             e.printStackTrace();
