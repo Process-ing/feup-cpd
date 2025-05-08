@@ -1,7 +1,6 @@
 package structs;
 
 import java.util.Optional;
-
 import server.ClientThread;
 import server.client.User;
 

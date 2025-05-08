@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -18,6 +19,7 @@ import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
 
 public class Server {
+
     private final ServerSocket serverSocket;
     private final AuthDb authDb;
     private final Map<String, Room> roomMap;
@@ -72,6 +74,8 @@ public class Server {
 
     public static void main(String[] args) {
         int port = 12345; // TODO(Process-ing): Get from args
+        String rootPath = System.getProperty("user.dir");
+        Path usersDBPath = Path.of(rootPath, "..", "data", "users.db").toAbsolutePath();
 
         ServerSocket serverSocket;
         try {
@@ -81,7 +85,14 @@ public class Server {
             return;
         }
 
-        AuthDb authDb = new SyncAuthDb();
+        AuthDb authDb;
+        try {
+            authDb = new SyncAuthDb(usersDBPath);
+        } catch (IOException e) {
+            System.err.println("Failed to load user DB: " + e.getMessage());
+            return;
+        }
+
         ProtocolParser parser = new ProtocolParserImpl();
         Server server = new Server(serverSocket, authDb, parser);
 
