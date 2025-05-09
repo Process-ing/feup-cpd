@@ -3,16 +3,10 @@ package server;
 import java.io.FileInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
-
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.SSLServerSocketFactory;
 
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
@@ -26,6 +20,7 @@ import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
+import utils.SSLSocketUtils;
 
 public class Server {
     private final ServerSocket serverSocket;
@@ -91,25 +86,6 @@ public class Server {
         }
     }
 
-    private static SSLServerSocket getServerSocket(int port, char[] password) throws Exception {
-        KeyStore keyStore = KeyStore.getInstance("JKS");
-        try (FileInputStream keyStoreStream = new FileInputStream("server.keystore")) {
-            keyStore.load(keyStoreStream, password);
-        }
-
-        String keyManagerAlgorithm = KeyManagerFactory.getDefaultAlgorithm();
-        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(keyManagerAlgorithm);
-        keyManagerFactory.init(keyStore, password);
-
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
-
-        SSLServerSocketFactory sslServerSocketFactory = sslContext.getServerSocketFactory();
-        SSLServerSocket serverSocket = (SSLServerSocket) sslServerSocketFactory.createServerSocket(port);
-
-        return serverSocket;
-    }
-
     public static void main(String[] args) {
         String passwordFile = "server-pass.txt";
 
@@ -119,7 +95,7 @@ public class Server {
 
         ServerSocket serverSocket;
         try {
-            serverSocket = getServerSocket(port, password);
+            serverSocket = SSLSocketUtils.newServerSocket(port, password);
         } catch (Exception e) {
             e.printStackTrace();
             return;
