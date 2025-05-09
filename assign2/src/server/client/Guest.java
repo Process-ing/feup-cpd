@@ -4,7 +4,6 @@ import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.AuthTokenUnit;
 import protocol.unit.ErrUnit;
-import protocol.unit.InvalidUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
@@ -58,15 +57,11 @@ public class Guest extends Client {
         Optional<String> validated = tm.validate(u.token());
 
         if (validated.isEmpty()) {
-            return Optional.of(new OkUnit(null));
+            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
         }
 
-        if (u.room() == null) {
-            User newUser = new User(thread, validated.get());
-            thread.setClient(newUser);
-        } else {
-            // TODO(mm): Enter the room
-        }
+        User newUser = new User(thread, validated.get());
+        thread.setClient(newUser);
 
         String token = tm.issue(validated.get());
         return Optional.of(new OkUnit(token));

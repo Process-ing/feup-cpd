@@ -16,6 +16,7 @@ import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import protocol.unit.AuthTokenUnit;
+import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.ProtocolUnit;
@@ -71,7 +72,7 @@ public class Client {
         if (session.exist()) {
             try {
                 // login-token
-                ProtocolUnit request = new AuthTokenUnit(session.getToken(), session.getRoom());
+                ProtocolUnit request = new AuthTokenUnit(session.getToken());
                 port.send(request);
                 previousUnit = request;
 
@@ -81,8 +82,22 @@ public class Client {
                     System.out.println("Server closed connection");
                     port.close();
                 }
-
                 unit.accept(state);
+
+                if (session.getRoom() != null) {
+                    // enter <room-name>
+                    request = new EnterUnit(session.getRoom());
+                    port.send(request);
+                    previousUnit = request;
+
+                    // respond
+                    unit = port.receive();
+                    if (unit instanceof EofUnit) {
+                        System.out.println("Server closed connection");
+                        port.close();
+                    }
+                    unit.accept(state);
+                }
             } catch (Exception e) {
                 System.out.println("Unexpected error: " + e.getMessage());
             }

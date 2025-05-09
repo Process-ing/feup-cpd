@@ -3,9 +3,9 @@ package client.state;
 import client.Client;
 import client.storage.SessionStore;
 import java.util.Optional;
+import protocol.ProtocolErrorIdentifier;
 import protocol.unit.AuthTokenUnit;
 import protocol.unit.ErrUnit;
-import protocol.unit.InvalidUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
@@ -59,12 +59,11 @@ public class GuestState extends ClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(ErrUnit unit) {
-        System.out.println("Error occurred during authentication: " + unit.id());
-        return Optional.empty();
-    }
+        // TODO: isto se calhar vai ser alterado pelo CLI
+        if (unit.id().equals(ProtocolErrorIdentifier.LOGIN)) 
+            return Optional.empty();
 
-    @Override
-    public Optional<ProtocolUnit> visit(InvalidUnit unit) {
+        System.out.println("Error occurred during authentication: " + unit.id());
         return Optional.empty();
     }
 }

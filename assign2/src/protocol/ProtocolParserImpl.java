@@ -135,17 +135,11 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildAuthToken(List<String> tokens) {
-        if (tokens.size() != 2 && tokens.size() != 1) 
+        if (tokens.size() != 1) 
             return new InvalidUnit();
 
         String token = tokens.get(0);
-        String room;
 
-        if(tokens.size() == 1)
-            room = null;
-        else
-            room = tokens.get(1);
-
-        return new AuthTokenUnit(token, room);
+        return new AuthTokenUnit(token);
     }
 }

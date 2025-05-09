@@ -3,12 +3,10 @@ package protocol.unit;
 import java.util.Optional;
 import protocol.ProtocolVisitor;
 
-public record AuthTokenUnit(String token, String room) implements ProtocolUnit {
+public record AuthTokenUnit(String token) implements ProtocolUnit {
     @Override
     public String serialize() {
-        return room == null 
-            ? String.format("login-token %s", token)
-            : String.format("login-token %s %s", token, room);
+        return String.format("login-token %s", token);
     }
 
     @Override
