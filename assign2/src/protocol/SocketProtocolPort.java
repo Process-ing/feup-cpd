@@ -43,20 +43,24 @@ public class SocketProtocolPort implements ProtocolPort {
     @Override
     public void send(ProtocolUnit unit) throws IOException {
         String serialized = unit.serialize();
-        writer.println(serialized);
-        writer.flush();
+
+        synchronized (writer) {
+            writer.println(serialized);
+            writer.flush();
+        }
     }
 
     @Override
     public ProtocolUnit receive() throws IOException {
         String line;
-        try {
-            line = reader.readLine();
-        } catch (SocketException e) {  // Connection reset by peer
-            line = null;
+        synchronized (reader) {
+            try {
+                line = reader.readLine();
+            } catch (SocketException e) {  // Connection reset by peer
+                line = null;
+            }
         }
 
-        closed = line == null;
         return parser.parse(line);
     }
 
