@@ -17,11 +17,9 @@ public class SSLSocketUtils {
     private static final String KEYSTORE_TYPE = "JKS";
     private static final String KEYMANAGER_FACTORY_ALG = "SunX509";
     private static final String SSL_CONTEXT_PROTOCOL = "TLS";
-    private static final String KEYSTORE_PATH = "server.keystore";
-    private static final String TRUSTSTORE_PATH = "client.truststore";
 
-    public static Socket newSocket(InetAddress address, int port, String password) throws IOException {
-        System.setProperty("javax.net.ssl.trustStore", TRUSTSTORE_PATH);
+    public static Socket newSocket(InetAddress address, int port, String password, String truststorePath) throws IOException {
+        System.setProperty("javax.net.ssl.trustStore", truststorePath);
         System.setProperty("javax.net.ssl.trustStorePassword", password);
 
         SSLSocketFactory socketFactory = (SSLSocketFactory) SSLSocketFactory.getDefault();
@@ -31,9 +29,9 @@ public class SSLSocketUtils {
         return socket;
     }
 
-    public static SSLServerSocket newServerSocket(int port, char[] password) throws Exception {
+    public static SSLServerSocket newServerSocket(int port, char[] password, String keystorePath) throws Exception {
         KeyStore keyStore = KeyStore.getInstance(KEYSTORE_TYPE);
-        try (FileInputStream keyStoreStream = new FileInputStream(KEYSTORE_PATH)) {
+        try (FileInputStream keyStoreStream = new FileInputStream(keystorePath)) {
             keyStore.load(keyStoreStream, password);
         }
 

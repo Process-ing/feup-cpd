@@ -1,11 +1,13 @@
 package server;
 
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Random;
 
 import protocol.ProtocolParser;
@@ -20,6 +22,7 @@ import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
+import utils.ConfigUtils;
 import utils.SSLSocketUtils;
 
 public class Server {
@@ -53,7 +56,7 @@ public class Server {
 
     public void run() {
         // TODO(Process-ing): Convert to real code
-        System.out.println("Server started!");
+        System.out.println("Server is listening on port " + serverSocket.getLocalPort());
 
         Room room = new RoomImpl("Lobby");
         addRoom(room);
@@ -77,25 +80,35 @@ public class Server {
     }
 
 
-    private static String getFileData(String fileName) {
-        try (FileInputStream inputStream = new FileInputStream(fileName)) {
-            return new String(inputStream.readAllBytes());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     public static void main(String[] args) {
-        String passwordFile = "server-pass.txt";
+        String configFilepath = "server.properties";
 
-        int port = 12345; // TODO(Process-ing): Get from args
+        Properties config;
+        try {
+            config = ConfigUtils.loadConfig(configFilepath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
-        char[] password = getFileData(passwordFile).toCharArray();
+        List<String> missingKeys = ConfigUtils.getMissing(config, List.of("port", "keystore", "keystore-password"));
+        if (!missingKeys.isEmpty()) {
+            System.err.println("Missing configuration keys: " + missingKeys);
+            return;
+        }
+
+        int port = ConfigUtils.getIntProperty(config, "port");
+        if (port < 1024 || port > 65535) {
+            System.err.printf("Port number must be between 1024 and 65535, port %d provided.%n", port);
+            return;
+        }
+
+        String keystorePath = config.getProperty("keystore");
+        char[] password = config.getProperty("keystore-password").toCharArray();
 
         ServerSocket serverSocket;
         try {
-            serverSocket = SSLSocketUtils.newServerSocket(port, password);
+            serverSocket = SSLSocketUtils.newServerSocket(port, password, keystorePath);
         } catch (Exception e) {
             e.printStackTrace();
             return;
