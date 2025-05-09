@@ -1,7 +1,6 @@
 package protocol;
 
 import java.util.Optional;
-
 import protocol.unit.*;
 
 public interface ProtocolVisitor {
@@ -15,4 +14,5 @@ public interface ProtocolVisitor {
     Optional<ProtocolUnit> visit(ErrUnit unit);
     Optional<ProtocolUnit> visit(InvalidUnit unit);
     Optional<ProtocolUnit> visit(EofUnit unit);
+    Optional<ProtocolUnit> visit(AuthTokenUnit unit);
 }

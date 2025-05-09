@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import server.ClientThread;
 import server.client.User;
+import structs.security.PasswordHasher;
 import structs.storage.AuthFileStore;
-import structs.storage.PasswordHasher;
 
 public class SyncAuthDb implements AuthDb {
     private final Map<String, CredentialRecord> creds;

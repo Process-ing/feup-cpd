@@ -1,6 +1,7 @@
 package client.state;
 
 import client.Client;
+import client.storage.SessionStore;
 import java.util.Optional;
 import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
@@ -30,22 +31,26 @@ public class RoomState extends ClientState {
     @Override
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         Client client = this.getClient();
+        SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 
         switch (previousUnit) {
             case LeaveUnit leaveUnit -> {
                 System.out.println("Left room: " + roomName);
                 client.setState(new AuthenticatedState(client, username));
+                session.removeRoom();
             }
             case LogoutUnit logoutUnit -> {
                 System.out.println("Logged out");
                 client.setState(new GuestState(client));
+                session.clear();
             }
             default -> {
                 // No other actions should be possible in this state
             }
         }
 
+        session.save();
         return Optional.empty();
     }
 

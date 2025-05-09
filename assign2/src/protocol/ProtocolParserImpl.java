@@ -3,6 +3,7 @@ package protocol;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import protocol.unit.AuthTokenUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
@@ -25,6 +26,7 @@ public class ProtocolParserImpl implements ProtocolParser {
 
     public ProtocolParserImpl() {
         this.handlerMap = Map.ofEntries(
+            Map.entry("login-token", this::buildAuthToken),
             Map.entry("login", this::buildLogin),
             Map.entry("register", this::buildRegister),
             Map.entry("logout", this::buildLogout),
@@ -130,5 +132,20 @@ public class ProtocolParserImpl implements ProtocolParser {
             return new InvalidUnit();
 
         return new ErrUnit(id.get());
+    }
+
+    private ProtocolUnit buildAuthToken(List<String> tokens) {
+        if (tokens.size() != 2 && tokens.size() != 1) 
+            return new InvalidUnit();
+
+        String token = tokens.get(0);
+        String room;
+
+        if(tokens.size() == 1)
+            room = null;
+        else
+            room = tokens.get(1);
+
+        return new AuthTokenUnit(token, room);
     }
 }

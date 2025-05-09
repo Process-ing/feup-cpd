@@ -17,23 +17,30 @@ import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
+import structs.security.TokenManager;
 
 public class Server {
 
     private final ServerSocket serverSocket;
     private final AuthDb authDb;
+    private final TokenManager tokens;
     private final Map<String, Room> roomMap;
     private final ProtocolParser parser;
 
-    public Server(ServerSocket serverSocket, AuthDb authDb, ProtocolParser parser) {
+    public Server(ServerSocket serverSocket, AuthDb authDb, TokenManager tokens, ProtocolParser parser) {
         this.serverSocket = serverSocket;
         this.authDb = authDb;
+        this.tokens = tokens;
         this.parser = parser;
         this.roomMap = new HashMap<>();
     }
 
     public AuthDb getAuthDb() {
         return authDb;
+    }
+
+    public TokenManager getTokens() { 
+        return tokens; 
     }
 
     public ProtocolParser getParser() {
@@ -74,8 +81,8 @@ public class Server {
 
     public static void main(String[] args) {
         int port = 12345; // TODO(Process-ing): Get from args
-        String rootPath = System.getProperty("user.dir");
-        Path usersDBPath = Path.of(rootPath, "..", "data", "users.db").toAbsolutePath();
+        Path usersDBPath = Path.of(System.getProperty("user.dir"),
+                         "..", "data", "users.db").toAbsolutePath();
 
         ServerSocket serverSocket;
         try {
@@ -94,7 +101,8 @@ public class Server {
         }
 
         ProtocolParser parser = new ProtocolParserImpl();
-        Server server = new Server(serverSocket, authDb, parser);
+        TokenManager tokens = new TokenManager();
+        Server server = new Server(serverSocket, authDb, tokens, parser);
 
         server.run();
     }

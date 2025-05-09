@@ -3,9 +3,11 @@ package client;
 import client.state.ClientState;
 import client.state.GuestState;
 import client.state.RoomState;
+import client.storage.SessionStore;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -13,6 +15,7 @@ import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
+import protocol.unit.AuthTokenUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.ProtocolUnit;
@@ -25,6 +28,7 @@ public class Client {
     private final List<Message> messages;
     private final ProtocolParser parser;
     private ProtocolUnit previousUnit;
+    private final SessionStore session;
 
     public Client(ProtocolPort port, ClientState initState, ProtocolParser parser) {
         this(port, initState, List.of(), parser);
@@ -37,6 +41,8 @@ public class Client {
         this.messages = new ArrayList<>(messages);
         this.parser = parser;
         this.previousUnit = null;
+        this.session = new SessionStore(Path.of(System.getProperty("user.dir"),
+                             "..", "client", "data", "session.properties"));
     }
 
     public ProtocolUnit getPreviousUnit() {
@@ -45,6 +51,10 @@ public class Client {
 
     public ClientState getState() {
         return state;
+    }
+
+    public SessionStore getSession() {
+        return session;
     }
 
     public void setState(ClientState state) {
@@ -57,6 +67,26 @@ public class Client {
 
     public void run() {
         setState(new GuestState(this));
+
+        if (session.exist()) {
+            try {
+                // login-token
+                ProtocolUnit request = new AuthTokenUnit(session.getToken(), session.getRoom());
+                port.send(request);
+                previousUnit = request;
+
+                // respond
+                ProtocolUnit unit = port.receive();
+                if (unit instanceof EofUnit) {
+                    System.out.println("Server closed connection");
+                    port.close();
+                }
+
+                unit.accept(state);
+            } catch (Exception e) {
+                System.out.println("Unexpected error: " + e.getMessage());
+            }
+        }
 
         Thread.ofVirtual().start(() -> {
             try (Scanner scanner = new Scanner(System.in)) {

@@ -1,4 +1,4 @@
-package structs.storage;
+package structs.security;
 
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
