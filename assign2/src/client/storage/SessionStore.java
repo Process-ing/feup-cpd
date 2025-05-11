@@ -55,7 +55,8 @@ public final class SessionStore {
     }
 
     public void setToken(String token) { 
-        p.setProperty(KEY_TOKEN, token);
+        if (token != null) p.setProperty(KEY_TOKEN, token);
+        else p.remove(KEY_TOKEN);
     }
 
     public void setRoom(String room) { 

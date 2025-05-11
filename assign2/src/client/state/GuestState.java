@@ -37,7 +37,6 @@ public class GuestState extends ClientState {
                 session.setUsername(registerUnit.user());
             }
             case AuthTokenUnit _ -> {
-                if (unit.data().equals("null")) break;
                 System.out.println("Login successful: " + session.getUsername());
                 client.setState(new AuthenticatedState(client, session.getUsername()));
                 session.setToken(token);
