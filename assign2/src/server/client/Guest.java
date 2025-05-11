@@ -18,43 +18,43 @@ public class Guest extends Client {
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(LoginUnit u) {
+    public Optional<ProtocolUnit> visit(LoginUnit unit) {
         ClientThread thread = getThread();
         AuthDb authDb = thread.getServer().getAuthDb();
         TokenManager tm = thread.getServer().getTokens();
 
-        Optional<User> loggedUser = authDb.login(u.user(), u.pass(), thread);
+        Optional<User> loggedUser = authDb.login(unit.user(), unit.pass(), thread);
         if (loggedUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
 
         thread.setClient(loggedUser.get());
 
-        String token = tm.issue(u.user());
+        String token = tm.issue(unit.user());
         return Optional.of(new OkUnit(token));
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(RegisterUnit u) {
+    public Optional<ProtocolUnit> visit(RegisterUnit unit) {
         ClientThread thread = getThread();
         AuthDb authDb = thread.getServer().getAuthDb();
         TokenManager tm = thread.getServer().getTokens();
 
-        Optional<User> newUser = authDb.register(u.user(), u.pass(), thread);
+        Optional<User> newUser = authDb.register(unit.user(), unit.pass(), thread);
         if (newUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.REGISTER));
 
         thread.setClient(newUser.get());
 
-        String token = tm.issue(u.user());
+        String token = tm.issue(unit.user());
         return Optional.of(new OkUnit(token));
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(AuthTokenUnit u) {
+    public Optional<ProtocolUnit> visit(AuthTokenUnit unit) {
         ClientThread thread = getThread();
         TokenManager tm = thread.getServer().getTokens();
 
-        Optional<String> validated = tm.validate(u.token());
+        Optional<String> validated = tm.validate(unit.token());
 
         if (validated.isEmpty()) {
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));

@@ -36,16 +36,10 @@ public class GuestState extends ClientState {
                 session.setToken(token);
                 session.setUsername(registerUnit.user());
             }
-            case AuthTokenUnit authTokenUnit -> {
+            case AuthTokenUnit _ -> {
                 if (unit.data().equals("null")) break;
-
                 System.out.println("Login successful: " + session.getUsername());
-                
-                if (session.getRoom() != null)
-                    client.setState(new RoomState(client, session.getUsername(), session.getRoom()));
-                else 
-                    client.setState(new AuthenticatedState(client, session.getUsername()));
-
+                client.setState(new AuthenticatedState(client, session.getUsername()));
                 session.setToken(token);
             }
             default -> {
@@ -60,10 +54,8 @@ public class GuestState extends ClientState {
     @Override
     public Optional<ProtocolUnit> visit(ErrUnit unit) {
         // TODO: isto se calhar vai ser alterado pelo CLI
-        if (unit.id().equals(ProtocolErrorIdentifier.LOGIN)) 
-            return Optional.empty();
-
-        System.out.println("Error occurred during authentication: " + unit.id());
+        if (!unit.id().equals(ProtocolErrorIdentifier.LOGIN)) 
+            System.out.println("Error occurred during authentication: " + unit.id());
         return Optional.empty();
     }
 }

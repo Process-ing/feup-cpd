@@ -35,12 +35,12 @@ public class RoomState extends ClientState {
         ProtocolUnit previousUnit = client.getPreviousUnit();
 
         switch (previousUnit) {
-            case LeaveUnit leaveUnit -> {
+            case LeaveUnit _ -> {
                 System.out.println("Left room: " + roomName);
                 client.setState(new AuthenticatedState(client, username));
-                session.removeRoom();
+                session.setRoom(null);
             }
-            case LogoutUnit logoutUnit -> {
+            case LogoutUnit _ -> {
                 System.out.println("Logged out");
                 client.setState(new GuestState(client));
                 session.clear();

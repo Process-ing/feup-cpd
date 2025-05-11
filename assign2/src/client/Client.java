@@ -19,6 +19,7 @@ import protocol.unit.AuthTokenUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.InvalidUnit;
+import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import structs.Message;
@@ -69,39 +70,7 @@ public class Client {
     public void run() {
         setState(new GuestState(this));
 
-        if (session.exist()) {
-            try {
-                // login-token
-                ProtocolUnit request = new AuthTokenUnit(session.getToken());
-                port.send(request);
-                previousUnit = request;
-
-                // respond
-                ProtocolUnit unit = port.receive();
-                if (unit instanceof EofUnit) {
-                    System.out.println("Server closed connection");
-                    port.close();
-                }
-                unit.accept(state);
-
-                if (session.getRoom() != null) {
-                    // enter <room-name>
-                    request = new EnterUnit(session.getRoom());
-                    port.send(request);
-                    previousUnit = request;
-
-                    // respond
-                    unit = port.receive();
-                    if (unit instanceof EofUnit) {
-                        System.out.println("Server closed connection");
-                        port.close();
-                    }
-                    unit.accept(state);
-                }
-            } catch (Exception e) {
-                System.out.println("Unexpected error: " + e.getMessage());
-            }
-        }
+        restoreSession();
 
         Thread.ofVirtual().start(() -> {
             try (Scanner scanner = new Scanner(System.in)) {
@@ -158,6 +127,44 @@ public class Client {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void restoreSession() {
+        if (!session.hasSession()) return;
+
+        ProtocolUnit request, unit;
+        
+        try {
+            // login-token
+            request = new AuthTokenUnit(session.getToken());
+            port.send(request);
+            previousUnit = request;
+
+            // respond
+            unit = port.receive();
+            if (unit instanceof EofUnit) {
+                System.out.println("Server closed connection");
+                port.close();
+            }
+            unit.accept(state);
+
+            if (session.getRoom() != null && unit instanceof OkUnit) {
+                // enter <room-name>
+                request = new EnterUnit(session.getRoom());
+                port.send(request);
+                previousUnit = request;
+
+                // respond
+                unit = port.receive();
+                if (unit instanceof EofUnit) {
+                    System.out.println("Server closed connection");
+                    port.close();
+                }
+                unit.accept(state);
+            }
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
         }
     }
 
