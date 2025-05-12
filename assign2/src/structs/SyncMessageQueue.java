@@ -35,6 +35,19 @@ public class SyncMessageQueue implements MessageQueue {
     }
 
     @Override
+    public void pushAll(Collection<Message> messages) {
+        lock.lock();
+        try {
+            for (Message message : messages) {
+                queue.add(message);
+            }
+            notEmpty.signalAll();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    @Override
     public Optional<Message> pop() {
         lock.lock();
         try {
