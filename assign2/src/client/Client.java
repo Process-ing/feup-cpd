@@ -104,6 +104,7 @@ public class Client {
                             continue;
                         }
                         previousUnit = request;
+
                     } catch (Exception e) {
                         System.out.println("Unexpected error: " + e.getMessage());
                     }

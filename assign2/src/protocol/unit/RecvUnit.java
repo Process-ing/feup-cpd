@@ -13,7 +13,7 @@ public record RecvUnit(long vectorClock, String username, String message) implem
 
     @Override
     public String serialize() {
-        return String.format("recv %ld %s %s", vectorClock, username, ProtocolUtils.escapeToken(message));
+        return String.format("recv %d %s %s", vectorClock, username, ProtocolUtils.escapeToken(message));
     }
 
     @Override

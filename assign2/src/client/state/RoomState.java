@@ -57,7 +57,7 @@ public class RoomState extends ClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(RecvUnit unit) {
-        System.out.printf("%s# %s\n", unit.username(), unit.message());
+        System.out.printf("%s# %s\n", unit.username() == username ? "You" : unit.username(), unit.message());
         return Optional.empty();
     }
 }

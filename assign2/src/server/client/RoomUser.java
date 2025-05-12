@@ -42,11 +42,10 @@ public class RoomUser extends Client {
         Message message = room.addMessage(unit.message(), this);
 
         for (RoomUser user: room.getOnlineUsers()) {
-            if (!name.equals(user.name)) {
-                MessageQueue userQueue = user.getThread().getMessageQueue();
-                userQueue.push(message);
-            }
+            MessageQueue userQueue = user.getThread().getMessageQueue();
+            userQueue.push(message);
         }
+        
         return Optional.empty();
     }
 
