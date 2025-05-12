@@ -115,13 +115,17 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildRecv(List<String> args) {
-        if (args.size() != 2)
+        if (args.size() != 3)
             return new InvalidUnit();
 
-        String username = args.get(0);
-        String message = args.get(1);
+        Long vectorClock = parseLong(args.get(0));
+        if (vectorClock == null || vectorClock < 0)
+            return new InvalidUnit();
 
-        return new RecvUnit(username, message);
+        String username = args.get(1);
+        String message = args.get(2);
+
+        return new RecvUnit(vectorClock, username, message);
     }
 
     private ProtocolUnit buildOk(List<String> args) {
@@ -151,5 +155,13 @@ public class ProtocolParserImpl implements ProtocolParser {
         String token = args.get(0);
 
         return new AuthTokenUnit(token);
+    }
+
+    private Long parseLong(String str) {
+        try {
+            return Long.parseLong(str);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }
