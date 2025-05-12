@@ -7,7 +7,7 @@ import protocol.ProtocolVisitor;
 public record EofUnit() implements ProtocolUnit {
     @Override
     public String serialize() {
-        throw new UnsupportedOperationException("Cannot serialize EOF protocol unit");
+        return "EOF";
     }
 
     @Override
