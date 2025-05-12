@@ -17,12 +17,14 @@ public class ClientThread {
     private final ProtocolPort port;
     private final MessageQueue queue;
     private Client client;
+    private boolean done;
 
     public ClientThread(Server server, ProtocolPort port, MessageQueue queue, Client client) {
         this.server = server;
         this.port = port;
         this.queue = queue;
         this.client = client;
+        this.done = false;
     }
 
     public Server getServer() {
@@ -41,16 +43,30 @@ public class ClientThread {
         this.client = client;
     }
 
-    public void run() {
+    public void start() {
+        Thread.ofVirtual().start(this::handleSending);
+        Thread.ofVirtual().start(this::handleReceiving);
+    }
+
+    private void handleSending() {
         try {
-            while (true) {
+            while (!done) {
                 Optional<Message> pendingMessage = queue.pop();
                 if (pendingMessage.isPresent()) {
                     ProtocolUnit unit = new SendUnit(pendingMessage.get());
                     port.send(unit);
-                    continue;
                 }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            cleanup();
+        }
+    }
 
+    private void handleReceiving() {
+        try {
+            while (!done) {
                 ProtocolUnit request = port.receive();
                 if (request instanceof EofUnit) {
                     System.out.printf("[%s] EOF\n", LocalDateTime.now());
@@ -63,17 +79,23 @@ public class ClientThread {
                 if (response.isPresent())
                     port.send(response.get());
             }
-
         } catch (IOException e1) {
             e1.printStackTrace();
         } finally {
-            client.cleanup();
-
-            try {
-                port.close();
-            } catch (IOException e2) {
-                e2.printStackTrace();
-            }
+            cleanup();
         }
+    }
+
+    private void cleanup() {
+        if (done)
+            return;
+
+        client.cleanup();
+        try {
+            port.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        done = true;
     }
 }
