@@ -57,7 +57,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(newUser.get());
-        return Optional.of(new OkUnit("You have left the room"));
+        return Optional.of(new OkUnit("success"));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
         
         getThread().setClient(new Guest(getThread()));
-        return Optional.of(new OkUnit("You have logged out"));
+        return Optional.of(new OkUnit("success"));
     }
 
     @Override

@@ -59,8 +59,8 @@ public class ProtocolParserImpl implements ProtocolParser {
         }
 
         List<String> tokens = ProtocolUtils.tokenize(string.substring(firstSpaceIndex + 1));
-        return handler.apply(tokens);
 
+        return handler.apply(tokens);
     }
 
     private ProtocolUnit buildLogin(List<String> args) {
@@ -86,6 +86,7 @@ public class ProtocolParserImpl implements ProtocolParser {
     private ProtocolUnit buildLogout(List<String> args) {
         if (args.size() != 0)
             return new InvalidUnit();
+        
         return new LogoutUnit();
     }
 
