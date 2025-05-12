@@ -51,6 +51,22 @@ public class ClientThread {
     private void handleSending() {
         try {
             while (!done) {
+                Optional<Message> pendingMessage = queue.pop();
+                if (pendingMessage.isPresent()) {
+                    ProtocolUnit unit = new SendUnit(pendingMessage.get());
+                    port.send(unit);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            cleanup();
+        }
+    }
+
+    private void handleReceiving() {
+        try {
+            while (!done) {
                 ProtocolUnit request = port.receive();
                 if (request instanceof EofUnit) {
                     System.out.printf("[%s] EOF\n", LocalDateTime.now());
@@ -65,22 +81,6 @@ public class ClientThread {
             }
         } catch (IOException e1) {
             e1.printStackTrace();
-        } finally {
-            cleanup();
-        }
-    }
-
-    private void handleReceiving() {
-        try {
-            while (!done) {
-                Optional<Message> pendingMessage = queue.pop();
-                if (pendingMessage.isPresent()) {
-                    ProtocolUnit unit = new SendUnit(pendingMessage.get());
-                    port.send(unit);
-                }
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         } finally {
             cleanup();
         }
