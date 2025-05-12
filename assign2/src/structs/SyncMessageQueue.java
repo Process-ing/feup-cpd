@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class SyncMessageQueue implements MessageQueue {
     private final Queue<Message> queue;
     private final ReentrantLock lock;
+    private final Condition notEmpty;
 
     public SyncMessageQueue() {
         this(List.of());
@@ -18,6 +20,7 @@ public class SyncMessageQueue implements MessageQueue {
     public SyncMessageQueue(Collection<Message> queue) {
         this.queue = new ArrayDeque<>(queue);
         this.lock = new ReentrantLock();
+        this.notEmpty = this.lock.newCondition();
     }
 
     @Override
@@ -25,6 +28,7 @@ public class SyncMessageQueue implements MessageQueue {
         lock.lock();
         try {
             queue.add(message);
+            notEmpty.signal();
         } finally {
             lock.unlock();
         }
@@ -32,15 +36,16 @@ public class SyncMessageQueue implements MessageQueue {
 
     @Override
     public Optional<Message> pop() {
-        Message message;
-
         lock.lock();
         try {
-            message = queue.poll();
+            while (queue.isEmpty())
+                notEmpty.await();
+            return Optional.of(queue.poll());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Optional.empty();
         } finally {
             lock.unlock();
         }
-
-        return Optional.ofNullable(message);
     }
 }

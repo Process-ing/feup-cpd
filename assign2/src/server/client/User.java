@@ -15,15 +15,21 @@ import server.room.RoomImpl;
 
 public class User extends Client {
     private final String name;
+    private final String token;
 
-    public User(ClientThread thread, String name) {
+    public User(ClientThread thread, String name, String token) {
         super(thread);
 
         this.name = name;
+        this.token = token;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     @Override

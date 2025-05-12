@@ -6,5 +6,6 @@ import server.client.User;
 
 public interface AuthDb {
     Optional<User> register(String user, String pass, ClientThread thread);
-    Optional<User> login(String user, String pass, ClientThread thread);
+    Optional<User> loginPass(String user, String pass, ClientThread thread);
+    Optional<User> loginToken(String token, ClientThread thread);
 }

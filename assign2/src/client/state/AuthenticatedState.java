@@ -37,6 +37,7 @@ public class AuthenticatedState extends ClientState {
                 System.out.println("Logged out: " + username);
                 client.setState(new GuestState(client));
                 session.clear();
+                System.out.println("Session cleared");
             }
             default -> {
                 // No other actions should be possible in this state

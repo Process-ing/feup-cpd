@@ -9,11 +9,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import server.ClientThread;
 import server.client.User;
 import structs.security.PasswordHasher;
+import structs.security.TokenManager;
 import structs.storage.AuthFileStore;
 
 public class SyncAuthDb implements AuthDb {
     private final Map<String, CredentialRecord> creds;
     private final AuthFileStore store;
+    private final TokenManager tokenManager;
 
     private final ReentrantReadWriteLock.ReadLock readLock;
     private final ReentrantReadWriteLock.WriteLock writeLock;
@@ -25,6 +27,7 @@ public class SyncAuthDb implements AuthDb {
 
         this.store = new AuthFileStore(file);
         this.creds = new HashMap<>(store.load());
+        this.tokenManager = new TokenManager();
     }
 
     @Override
@@ -48,11 +51,13 @@ public class SyncAuthDb implements AuthDb {
             writeLock.unlock();
         }
 
-        return Optional.of(new User(thread, user));
+        String token = tokenManager.issue(user);
+
+        return Optional.of(new User(thread, user, token));
     }
 
     @Override
-    public Optional<User> login(String user, String pass, ClientThread thread) {
+    public Optional<User> loginPass(String user, String pass, ClientThread thread) {
         readLock.lock();
 
         try {
@@ -63,6 +68,19 @@ public class SyncAuthDb implements AuthDb {
             readLock.unlock();
         }
 
-        return Optional.of(new User(thread, user));
+        String token = tokenManager.issue(user);
+
+        return Optional.of(new User(thread, user, token));
+    }
+
+    @Override
+    public Optional<User> loginToken(String token, ClientThread thread) {
+        Optional<String> validated = tokenManager.validate(token);
+
+        if (validated.isEmpty()) return Optional.empty();
+
+        String newToken = tokenManager.issue(validated.get());
+        
+        return Optional.of(new User(thread, validated.get(), newToken));
     }
 }
