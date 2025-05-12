@@ -9,6 +9,7 @@ import java.util.Random;
 
 import client.state.ClientState;
 import client.state.RoomState;
+import exception.EndpointUnreachableException;
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -22,6 +23,7 @@ public class Client {
     private final ProtocolPort port;
     private ClientState state;
     private final List<Message> messages;
+    private boolean done = false;
 
     public Client(ProtocolPort port, ClientState initState) {
         this(port, initState, List.of());
@@ -48,12 +50,13 @@ public class Client {
 
     public void run() {
         // TODO(Process-ing): Replace with real code
+        done = false;
         setState(new RoomState(this, "JohnDoe" + new Random().nextInt(), "Lobby"));
 
         Thread.ofVirtual().start(() -> {
             int count = 1;
             try {
-                while (true) {
+                while (!done) {
                     String message = String.format("My message #%d", count);
                     ProtocolUnit unit = new SendUnit(((RoomState) state).getUsername(), message);
 
@@ -66,19 +69,24 @@ public class Client {
                 Thread.currentThread().interrupt();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                done = true;
             }
         });
 
+
         try {
-            while (true) {
+            while (!done) {
                 ProtocolUnit unit = port.receive();
                 if (unit instanceof EofUnit) {
-                    System.out.println("Server closed connection");
-                    break;
+                    port.reconnect();
+                    continue;
                 }
 
                 unit.accept(state);
             }
+        } catch (EndpointUnreachableException e) {
+            System.out.println("Connection to server lost, terminating.");
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -87,6 +95,7 @@ public class Client {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            done = true;
         }
     }
 
