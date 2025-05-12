@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 import java.util.Random;
 
 import client.state.ClientState;
@@ -18,6 +19,8 @@ import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import structs.Message;
+import utils.ConfigUtils;
+import utils.SSLSocketUtils;
 
 public class Client {
     private final ProtocolPort port;
@@ -99,27 +102,57 @@ public class Client {
         }
     }
 
+
     public static void main(String[] args) {
         // TODO(Process-ing): Replace with real code
+        String configFilepath = "client.properties";
 
-        int portNumber = 12345;  // TODO(Process-ing): Get from args
-        ProtocolParser parser = new ProtocolParserImpl();
+        Properties config;
+        try {
+            config = ConfigUtils.loadConfig(configFilepath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
 
+        List<String> missingKeys = ConfigUtils.getMissing(config, List.of("host", "port", "truststore-password", "truststore"));
+        if (!missingKeys.isEmpty()) {
+            System.err.println("Missing configuration keys: " + missingKeys);
+            return;
+        }
+
+        String host = config.getProperty("host");
         InetAddress address;
+        try {
+            address = InetAddress.getByName(host);
+        } catch (IOException e) {
+            System.err.printf("Invalid host name: %s%n", host);
+            return;
+        }
+
+        int port = ConfigUtils.getIntProperty(config, "port");
+        if (port < 1024 || port > 65535) {
+            System.err.printf("Port number must be between 1024 and 65535, port %d provided.%n", port);
+            return;
+        }
+
+        String truststorePath = config.getProperty("truststore");
+        String password = config.getProperty("truststore-password");
+
+        ProtocolParser parser = new ProtocolParserImpl();
         Socket socket;
-        ProtocolPort port;
+        ProtocolPort protocolPort;
 
         try {
-            address = InetAddress.getLocalHost();  // TODO(Process-ing): Get from args
-            socket = new Socket(address, portNumber);
-            port = new SocketProtocolPort(socket, parser);
+            socket = SSLSocketUtils.newSocket(address, port, password, truststorePath);
+            protocolPort = new SocketProtocolPort(socket, parser);
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
         ClientState initState = new RoomState(null, "JohnDoe", "Lobby");
-        Client client = new Client(port, initState);
+        Client client = new Client(protocolPort, initState);
 
         client.run();
     }

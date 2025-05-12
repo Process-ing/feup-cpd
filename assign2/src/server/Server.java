@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Random;
 
 import protocol.ProtocolParser;
@@ -20,6 +22,8 @@ import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
+import utils.ConfigUtils;
+import utils.SSLSocketUtils;
 
 public class Server {
     private final ServerSocket serverSocket;
@@ -52,6 +56,8 @@ public class Server {
 
     public void run() {
         // TODO(Process-ing): Convert to real code
+        System.out.println("Server is listening on port " + serverSocket.getLocalPort());
+
         Room room = new RoomImpl("Lobby");
         addRoom(room);
 
@@ -73,14 +79,38 @@ public class Server {
         }
     }
 
+
     public static void main(String[] args) {
-        int port = 12345; // TODO(Process-ing): Get from args
+        String configFilepath = "server.properties";
+
+        Properties config;
+        try {
+            config = ConfigUtils.loadConfig(configFilepath);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        List<String> missingKeys = ConfigUtils.getMissing(config, List.of("port", "keystore", "keystore-password"));
+        if (!missingKeys.isEmpty()) {
+            System.err.println("Missing configuration keys: " + missingKeys);
+            return;
+        }
+
+        int port = ConfigUtils.getIntProperty(config, "port");
+        if (port < 1024 || port > 65535) {
+            System.err.printf("Port number must be between 1024 and 65535, port %d provided.%n", port);
+            return;
+        }
+
+        String keystorePath = config.getProperty("keystore");
+        char[] password = config.getProperty("keystore-password").toCharArray();
 
         ServerSocket serverSocket;
         try {
-            serverSocket = new ServerSocket(port);
-        } catch (IOException e) {
-            System.err.println("Error creating server socket: " + e.getMessage());
+            serverSocket = SSLSocketUtils.newServerSocket(port, password, keystorePath);
+        } catch (Exception e) {
+            e.printStackTrace();
             return;
         }
 
