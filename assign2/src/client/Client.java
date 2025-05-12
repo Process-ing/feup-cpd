@@ -85,20 +85,20 @@ public class Client {
                     try {
                         String input = scanner.nextLine();
                         ProtocolUnit request = null;
-        
+
                         if (input.startsWith("/")) {
                             request = parser.parse(input.substring(1));
-                        } else if (state instanceof RoomState roomState) {
-                            request = new SendUnit(roomState.getUsername(), input);
+                        } else if (state instanceof RoomState) {
+                            request = new SendUnit(input);
                         }
-        
+
                         if (request == null || request instanceof InvalidUnit) {
                             System.out.println("Invalid command");
                             continue;
                         }
-        
+
                         port.send(request);
-        
+
                         if (request instanceof SendUnit sendUnit) {
                             System.out.printf("You# %s\n", sendUnit.message());
                             continue;
@@ -144,7 +144,7 @@ public class Client {
         if (!session.hasSession()) return;
 
         ProtocolUnit request, unit;
-        
+
         try {
             // login-token
             request = new AuthTokenUnit(session.getToken());

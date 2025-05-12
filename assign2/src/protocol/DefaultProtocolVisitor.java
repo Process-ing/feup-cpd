@@ -37,6 +37,11 @@ public interface DefaultProtocolVisitor extends ProtocolVisitor {
     }
 
     @Override
+    default Optional<ProtocolUnit> visit(RecvUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
     default Optional<ProtocolUnit> visit(OkUnit unit) {
         return visitDefault(unit);
     }

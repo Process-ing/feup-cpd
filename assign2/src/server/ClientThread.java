@@ -6,7 +6,7 @@ import java.util.Optional;
 import protocol.ProtocolPort;
 import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.SendUnit;
+import protocol.unit.RecvUnit;
 import server.client.Client;
 import structs.Message;
 import structs.MessageQueue;
@@ -52,7 +52,7 @@ public class ClientThread {
             while (!done) {
                 Optional<Message> pendingMessage = queue.pop();
                 if (pendingMessage.isPresent()) {
-                    ProtocolUnit unit = new SendUnit(pendingMessage.get());
+                    ProtocolUnit unit = new RecvUnit(pendingMessage.get());
                     port.send(unit);
                 }
             }

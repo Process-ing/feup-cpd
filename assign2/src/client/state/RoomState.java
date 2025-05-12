@@ -8,7 +8,7 @@ import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.SendUnit;
+import protocol.unit.RecvUnit;
 
 public class RoomState extends ClientState {
     private final String username;
@@ -56,7 +56,7 @@ public class RoomState extends ClientState {
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(SendUnit unit) {
+    public Optional<ProtocolUnit> visit(RecvUnit unit) {
         System.out.printf("%s# %s\n", unit.username(), unit.message());
         return Optional.empty();
     }

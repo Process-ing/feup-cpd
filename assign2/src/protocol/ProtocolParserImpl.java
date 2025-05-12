@@ -16,6 +16,7 @@ import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RegisterUnit;
 import protocol.unit.SendUnit;
+import protocol.unit.RecvUnit;
 
 @FunctionalInterface
 interface ParseHandler {
@@ -34,6 +35,7 @@ public class ProtocolParserImpl implements ProtocolParser {
             Map.entry("enter", this::buildEnter),
             Map.entry("leave", this::buildLeave),
             Map.entry("send", this::buildSend),
+            Map.entry("recv", this::buildRecv),
             Map.entry("ok", this::buildOk),
             Map.entry("err", this::buildErr)
         );
@@ -83,7 +85,7 @@ public class ProtocolParserImpl implements ProtocolParser {
     private ProtocolUnit buildLogout(List<String> args) {
         if (args.size() != 0)
             return new InvalidUnit();
-        
+
         return new LogoutUnit();
     }
 
@@ -104,13 +106,22 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildSend(List<String> args) {
+        if (args.size() != 1)
+            return new InvalidUnit();
+
+        String message = args.get(0);
+
+        return new SendUnit(message);
+    }
+
+    private ProtocolUnit buildRecv(List<String> args) {
         if (args.size() != 2)
             return new InvalidUnit();
 
         String username = args.get(0);
         String message = args.get(1);
 
-        return new SendUnit(username, message);
+        return new RecvUnit(username, message);
     }
 
     private ProtocolUnit buildOk(List<String> args) {
@@ -134,7 +145,7 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildAuthToken(List<String> args) {
-        if (args.size() != 1) 
+        if (args.size() != 1)
             return new InvalidUnit();
 
         String token = args.get(0);
