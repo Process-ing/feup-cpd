@@ -1,2 +1,3 @@
 build/*
-db.cpd
+client/data/session.properties
+data/db.cpd

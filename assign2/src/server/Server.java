@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -81,7 +82,7 @@ public class Server {
 
     public static void main(String[] args) {
         Path usersDBPath = Path.of(System.getProperty("user.dir"),
-                         "..", "data", "users.db").toAbsolutePath();
+                         "..", "data", "db.cpd").toAbsolutePath();
         String configFilepath = "server.properties";
 
         Properties config;

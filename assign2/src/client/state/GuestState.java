@@ -1,8 +1,9 @@
 package client.state;
 
+import java.util.Optional;
+
 import client.Client;
 import client.storage.SessionStore;
-import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.AuthTokenUnit;
 import protocol.unit.ErrUnit;
@@ -36,7 +37,7 @@ public class GuestState extends ClientState {
                 session.setToken(token);
                 session.setUsername(registerUnit.user());
             }
-            case AuthTokenUnit _ -> {
+            case AuthTokenUnit authTokenUnit -> {
                 System.out.println("Login successful: " + session.getUsername());
                 client.setState(new AuthenticatedState(client, session.getUsername()));
                 session.setToken(token);
