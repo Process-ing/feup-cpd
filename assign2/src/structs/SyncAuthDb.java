@@ -1,59 +1,86 @@
 package structs;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import server.ClientThread;
 import server.client.User;
+import structs.security.PasswordHasher;
+import structs.security.TokenManager;
+import structs.storage.AuthFileStore;
 
 public class SyncAuthDb implements AuthDb {
-    private final Map<String, String> logins;
+    private final Map<String, CredentialRecord> creds;
+    private final AuthFileStore store;
+    private final TokenManager tokenManager;
+
     private final ReentrantReadWriteLock.ReadLock readLock;
     private final ReentrantReadWriteLock.WriteLock writeLock;
 
-    public SyncAuthDb() {
-        // TODO(Process-ing): Add load from file
-        this.logins = new HashMap<>();
-
+    public SyncAuthDb(Path file) throws IOException {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         this.readLock = lock.readLock();
         this.writeLock = lock.writeLock();
+
+        this.store = new AuthFileStore(file);
+        this.creds = new HashMap<>(store.load());
+        this.tokenManager = new TokenManager();
     }
 
     @Override
     public Optional<User> register(String user, String pass, ClientThread thread) {
-        String storedPass;
-
         writeLock.lock();
+
         try {
-            storedPass = logins.putIfAbsent(user, pass);
+            if (creds.containsKey(user)) return Optional.empty();
+            
+            CredentialRecord rec = PasswordHasher.hash(pass.toCharArray());
+            creds.put(user, rec);
+
+            try {
+                store.append(user, rec);
+            } catch (IOException ioe) {
+                creds.remove(user);
+                return Optional.empty();
+            }
+
         } finally {
             writeLock.unlock();
         }
 
-        if (storedPass != null) {
-            return Optional.empty();
-        }
+        String token = tokenManager.issue(user);
 
-        return Optional.of(new User(thread, user));
+        return Optional.of(new User(thread, user, token));
     }
 
     @Override
-    public Optional<User> login(String user, String pass, ClientThread thread) {
-        String storedPass;
-
+    public Optional<User> loginPass(String user, String pass, ClientThread thread) {
         readLock.lock();
+
         try {
-            storedPass = logins.get(user);
+            CredentialRecord rec = creds.get(user);
+            if (rec == null || !PasswordHasher.verify(pass.toCharArray(), rec)) 
+                return Optional.empty();
         } finally {
             readLock.unlock();
         }
 
-        if (!pass.equals(storedPass))
-            return Optional.empty();
+        String token = tokenManager.issue(user);
 
-        return Optional.of(new User(thread, user));
+        return Optional.of(new User(thread, user, token));
+    }
+
+    @Override
+    public Optional<User> loginToken(String token, ClientThread thread) {
+        Optional<String> validated = tokenManager.validate(token);
+
+        if (validated.isEmpty()) return Optional.empty();
+
+        String newToken = tokenManager.issue(validated.get());
+        
+        return Optional.of(new User(thread, validated.get(), newToken));
     }
 }

@@ -15,12 +15,14 @@ import structs.MessageQueue;
 public class RoomUser extends Client {
     private final String name;
     private final Room room;
+    private final String token;
 
-    public RoomUser(ClientThread thread, String name, Room room) {
+    public RoomUser(ClientThread thread, String name, Room room, String token) {
         super(thread);
 
         this.name = name;
         this.room = room;
+        this.token = token;
     }
 
     public String getName() {
@@ -29,6 +31,10 @@ public class RoomUser extends Client {
 
     public Room getRoom() {
         return room;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     @Override
@@ -51,7 +57,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(newUser.get());
-        return Optional.of(new OkUnit("You have left the room"));
+        return Optional.of(new OkUnit("success"));
     }
 
     @Override
@@ -61,7 +67,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
         
         getThread().setClient(new Guest(getThread()));
-        return Optional.of(new OkUnit("You have logged out"));
+        return Optional.of(new OkUnit("success"));
     }
 
     @Override

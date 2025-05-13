@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import server.client.RoomUser;
 import server.client.User;
 import structs.Message;
@@ -38,7 +37,7 @@ public class RoomImpl implements Room {
         if (currentUser != null)
             return Optional.of(currentUser);
 
-        RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this);
+        RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this, user.getToken());
         userMap.put(newUser.getName(), newUser);
         return Optional.of(newUser);
 
@@ -51,7 +50,7 @@ public class RoomImpl implements Room {
         if (removedUser == null)
             return Optional.empty();
 
-        User newUser = new User(user.getThread(), user.getName());
+        User newUser = new User(user.getThread(), user.getName(), user.getToken());
         return Optional.of(newUser);
     }
 
