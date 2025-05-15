@@ -102,8 +102,10 @@ public class SocketProtocolPort implements ProtocolPort {
                 readerLock.unlock();
             }
 
-            if (line == null)  // Connection closed by peer
+            if (line == null) { // Connection closed by peer
                 close();
+                return new EofUnit();
+            }
 
             unit = parser.parse(line);
 

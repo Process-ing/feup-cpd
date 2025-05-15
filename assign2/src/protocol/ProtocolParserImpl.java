@@ -18,6 +18,7 @@ import protocol.unit.PongUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RegisterUnit;
 import protocol.unit.SendUnit;
+import protocol.unit.SyncUnit;
 import protocol.unit.RecvUnit;
 
 @FunctionalInterface
@@ -38,6 +39,7 @@ public class ProtocolParserImpl implements ProtocolParser {
             Map.entry("leave", this::buildLeave),
             Map.entry("send", this::buildSend),
             Map.entry("recv", this::buildRecv),
+            Map.entry("sync", this::buildSync),
             Map.entry("ok", this::buildOk),
             Map.entry("err", this::buildErr),
             Map.entry("ping", this::buildPing),
@@ -122,14 +124,25 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (args.size() != 3)
             return new InvalidUnit();
 
-        Long vectorClock = parseLong(args.get(0));
-        if (vectorClock == null || vectorClock < 0)
+        Integer id = parseInt(args.get(0));
+        if (id == null || id < 0)
             return new InvalidUnit();
 
         String username = args.get(1);
         String message = args.get(2);
 
-        return new RecvUnit(vectorClock, username, message);
+        return new RecvUnit(id, username, message);
+    }
+
+    private ProtocolUnit buildSync(List<String> args) {
+        if (args.size() != 1)
+            return new InvalidUnit();
+
+        Integer id = parseInt(args.get(0));
+        if (id == null || id < 0)
+            return new InvalidUnit();
+
+        return new SyncUnit(id);
     }
 
     private ProtocolUnit buildOk(List<String> args) {
@@ -175,9 +188,9 @@ public class ProtocolParserImpl implements ProtocolParser {
         return new PongUnit();
     }
 
-    private Long parseLong(String str) {
+    private Integer parseInt(String str) {
         try {
-            return Long.parseLong(str);
+            return Integer.parseInt(str);
         } catch (NumberFormatException e) {
             return null;
         }

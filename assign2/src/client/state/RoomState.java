@@ -60,12 +60,14 @@ public class RoomState extends ClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(RecvUnit unit) {
-        if (unit.vectorClock() == lastId + 1 || lastId == -1) {
+        if (unit.id() == lastId + 1 || lastId == -1) {
             System.out.printf("%s# %s\n", unit.username() == username ? "You" : unit.username(), unit.message());
+            lastId = unit.id();
+
             return Optional.empty();
         }
 
-        if (unit.vectorClock() > lastId + 1) {  // Missing messages
+        if (unit.id() > lastId + 1) { // Missing messages
             return Optional.of(new SyncUnit(lastId));
         }
 

@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.function.Supplier;
@@ -123,7 +124,10 @@ public class Client {
                     continue;
                 }
 
-                unit.accept(state);
+                Optional<ProtocolUnit> response = unit.accept(state);
+                if (response.isPresent()) {
+                    port.send(response.get());
+                }
             }
         } catch (EndpointUnreachableException e) {
             System.out.println("Connection to server lost, terminating.");
