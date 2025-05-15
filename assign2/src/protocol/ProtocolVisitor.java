@@ -27,5 +27,10 @@ public interface ProtocolVisitor {
     Optional<ProtocolUnit> visit(InvalidUnit unit);
 
     Optional<ProtocolUnit> visit(EofUnit unit);
+    
     Optional<ProtocolUnit> visit(AuthTokenUnit unit);
+
+    Optional<ProtocolUnit> visit(PingUnit unit);
+
+    Optional<ProtocolUnit> visit(PongUnit unit);
 }

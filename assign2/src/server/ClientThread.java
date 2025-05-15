@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import protocol.ProtocolPort;
+import protocol.unit.EofUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RecvUnit;
 import server.client.Client;
@@ -67,6 +68,8 @@ public class ClientThread {
             while (!done) {
                 ProtocolUnit request = port.receive();
                 System.out.printf("[%s] %s\n", LocalDateTime.now(), request.serialize());
+                if (request instanceof EofUnit)
+                    break;
 
                 Optional<ProtocolUnit> response = request.accept(client);
                 if (response.isPresent())

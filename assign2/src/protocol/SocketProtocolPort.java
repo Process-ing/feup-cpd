@@ -2,117 +2,173 @@ package protocol;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.net.InetAddress;
 import java.net.Socket;
-import java.net.SocketException;
+import java.net.SocketTimeoutException;
+import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import exception.EndpointUnreachableException;
+import protocol.unit.EofUnit;
+import protocol.unit.PingUnit;
+import protocol.unit.PongUnit;
 import protocol.unit.ProtocolUnit;
 
 public class SocketProtocolPort implements ProtocolPort {
-    private static final int INITIAL_BACKOFF = 250; // ms
+    private static final int INITIAL_BACKOFF = 1000; // ms
     private static final int MAX_RETRIES = 5;
 
-    private Socket socket;
-    private BufferedReader reader;
-    private PrintWriter writer;
+    private final Supplier<Socket> socketFactory;
     private final ProtocolParser parser;
-    private boolean closed = true;
 
-    public SocketProtocolPort(Socket socket, ProtocolParser parser) throws IOException {
-        this.socket = socket;
+    private Optional<Socket> socket;
+    private Optional<BufferedReader> reader;
+    private Optional<PrintWriter> writer;
+
+    private final ReentrantLock writerLock;
+    private final ReentrantLock readerLock;
+
+    public SocketProtocolPort(Supplier<Socket> socketFactory, ProtocolParser parser) {
+        this.socketFactory = socketFactory;
         this.parser = parser;
 
-        InputStream input = socket.getInputStream();
-        this.reader = new BufferedReader(new InputStreamReader(input));
+        this.socket = Optional.empty();
+        this.reader = Optional.empty();
+        this.writer = Optional.empty();
 
-        OutputStream output = socket.getOutputStream();
-        this.writer = new PrintWriter(output, true);
-
-        closed = false;
+        this.readerLock = new ReentrantLock();
+        this.writerLock = new ReentrantLock();
     }
 
     public Socket getSocket() {
-        return socket;
+        if (socket.isEmpty()) {
+            throw new IllegalStateException("Socket is not initialized");
+        }
+
+        return socket.get();
     }
 
     @Override
     public void send(ProtocolUnit unit) throws IOException {
-        String serialized = unit.serialize();
+        if (writer.isEmpty()) {
+            throw new IllegalStateException("Socket is not initialized");
+        }
 
-        synchronized (writer) {
+        String serialized = unit.serialize();
+        PrintWriter writer = this.writer.get();
+
+        writerLock.lock();
+        try {
             writer.println(serialized);
             writer.flush();
+        } finally {
+            writerLock.unlock();
         }
     }
 
     @Override
     public ProtocolUnit receive() throws IOException {
-        String line;
-        synchronized (reader) {
-            try {
-                line = reader.readLine();
-            } catch (SocketException e) {  // Connection reset by peer
-                line = null;
-            }
+        if (reader.isEmpty()) {
+            throw new IllegalStateException("Socket is not initialized");
         }
 
-        return parser.parse(line);
+        String line;
+        ProtocolUnit unit;
+        BufferedReader reader = this.reader.get();
+
+        while (true) {
+            readerLock.lock();
+            try {
+                line = reader.readLine();
+            } catch (SocketTimeoutException e) {
+                readerLock.unlock();
+                send(new PingUnit());
+
+                readerLock.lock();
+                try {
+                    line = reader.readLine();
+                } catch (SocketTimeoutException e2) { // On ping timeout, assume connection is lost
+                    close();
+                    return new EofUnit();
+                } catch (IOException e2) { // Connection reset by peer
+                    return new EofUnit();
+                }
+
+            } catch (IOException e) { // Connection reset by peer
+                return new EofUnit();
+            } finally {
+                readerLock.unlock();
+            }
+
+            if (line == null)  // Connection closed by peer
+                close();
+
+            unit = parser.parse(line);
+
+            if (unit instanceof PingUnit) {  // Respond to ping
+                send(new PongUnit());
+                continue;
+
+            } else if (unit instanceof PongUnit) {  // Ignore pong
+                continue;
+            }
+
+            return unit;
+        }
     }
 
     @Override
-    public void reconnect() throws EndpointUnreachableException, IOException {
-        if (!closed)
+    public void connect() throws EndpointUnreachableException, IOException {
+        if (socket.isPresent()) {
             return;
+        }
 
-        InetAddress address = socket.getInetAddress();
-        int port = socket.getPort();
-
-        boolean reconnected = false;
         long backoff = INITIAL_BACKOFF;
         for (int tries = 0; tries < MAX_RETRIES; tries++) {
-            try {
-                socket = new Socket(address, port);
-                reconnected = true;
+            socket = Optional.ofNullable(socketFactory.get());
+            if (socket.isPresent())
                 break;
 
-            } catch (IOException e) {
-                System.err.println("Connection to server failed, retrying...");
-                backoff *= 2;
+            System.err.println("Connection to server failed, retrying...");
+            backoff *= 2;
 
-                try {
-                    Thread.sleep(backoff);
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                    break;
-                }
+            try {
+                Thread.sleep(backoff);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+                break;
             }
         }
 
-        if (!reconnected) {
+        if (socket.isEmpty()) {
             throw new EndpointUnreachableException("Could not establish a connection to the server");
         }
 
-        var input = socket.getInputStream();
-        reader = new BufferedReader(new InputStreamReader(input));
+        Socket newSocket = socket.get();
 
-        var output = socket.getOutputStream();
-        writer = new PrintWriter(output, true);
+        var input = newSocket.getInputStream();
+        reader = Optional.of(new BufferedReader(new InputStreamReader(input)));
 
-        closed = false;
+        var output = newSocket.getOutputStream();
+        writer = Optional.of(new PrintWriter(output, true));
     }
 
     @Override
-    public boolean isClosed() {
-        return closed;
+    public boolean isConnected() {
+        return socket.isPresent();
     }
 
     @Override
     public void close() throws IOException {
-        socket.close();
+        if (socket.isEmpty()) {
+            return;
+        }
+
+        socket.get().close();
+        reader = Optional.empty();
+        writer = Optional.empty();
+        socket = Optional.empty();
     }
 }

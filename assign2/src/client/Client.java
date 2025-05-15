@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.function.Supplier;
+
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -26,7 +28,7 @@ import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import structs.Message;
 import utils.ConfigUtils;
-import utils.SSLSocketUtils;
+import utils.SocketUtils;
 
 public class Client {
     private final ProtocolPort port;
@@ -97,12 +99,9 @@ public class Client {
                             continue;
                         }
 
-                        port.send(request);
+                        if (port.isConnected())
+                            port.send(request);
 
-                        if (request instanceof SendUnit sendUnit) {
-                            System.out.printf("You# %s\n", sendUnit.message());
-                            continue;
-                        }
                         previousUnit = request;
 
                     } catch (Exception e) {
@@ -116,12 +115,11 @@ public class Client {
             }
         });
 
-
         try {
             while (!done) {
                 ProtocolUnit unit = port.receive();
                 if (unit instanceof EofUnit) {
-                    port.reconnect();
+                    port.connect();
                     continue;
                 }
 
@@ -142,12 +140,12 @@ public class Client {
     }
 
     private void restoreSession() {
-        if (!session.hasSession()) return;
+        if (!session.hasSession())
+            return;
 
         ProtocolUnit request, unit;
 
         try {
-            // login-token
             request = new AuthTokenUnit(session.getToken());
             port.send(request);
             previousUnit = request;
@@ -179,6 +177,20 @@ public class Client {
         }
     }
 
+
+    private static Socket createSocket(InetAddress address, int port, String password, String truststorePath) {
+        try {
+            Socket socket = SocketUtils.newSSLSocket(address, port, password, truststorePath);
+            SocketUtils.configureSocket(socket);
+            System.out.println(socket.getLocalPort());
+
+            return socket;
+
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
     public static void main(String[] args) {
         // TODO(Process-ing): Replace with real code
         String configFilepath = "client.properties";
@@ -191,7 +203,8 @@ public class Client {
             return;
         }
 
-        List<String> missingKeys = ConfigUtils.getMissing(config, List.of("host", "port", "truststore-password", "truststore"));
+        List<String> missingKeys = ConfigUtils.getMissing(config,
+                List.of("host", "port", "truststore-password", "truststore"));
         if (!missingKeys.isEmpty()) {
             System.err.println("Missing configuration keys: " + missingKeys);
             return;
@@ -216,14 +229,13 @@ public class Client {
         String password = config.getProperty("truststore-password");
 
         ProtocolParser parser = new ProtocolParserImpl();
-        Socket socket;
-        ProtocolPort protocolPort;
+        Supplier<Socket> socketFactory = () -> createSocket(address, port, password, truststorePath);
+        ProtocolPort protocolPort = new SocketProtocolPort(socketFactory, parser);
 
         try {
-            socket = SSLSocketUtils.newSocket(address, port, password, truststorePath);
-            protocolPort = new SocketProtocolPort(socket, parser);
-        } catch (IOException e) {
-            e.printStackTrace();
+            protocolPort.connect();
+        } catch (IOException | EndpointUnreachableException e) {
+            System.err.printf("Failed to connect to server at %s:%d: %s%n", host, port, e.getMessage());
             return;
         }
 

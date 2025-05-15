@@ -13,6 +13,8 @@ import protocol.unit.LeaveUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
+import protocol.unit.PingUnit;
+import protocol.unit.PongUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RegisterUnit;
 import protocol.unit.SendUnit;
@@ -37,7 +39,9 @@ public class ProtocolParserImpl implements ProtocolParser {
             Map.entry("send", this::buildSend),
             Map.entry("recv", this::buildRecv),
             Map.entry("ok", this::buildOk),
-            Map.entry("err", this::buildErr)
+            Map.entry("err", this::buildErr),
+            Map.entry("ping", this::buildPing),
+            Map.entry("pong", this::buildPong)
         );
     }
 
@@ -155,6 +159,20 @@ public class ProtocolParserImpl implements ProtocolParser {
         String token = args.get(0);
 
         return new AuthTokenUnit(token);
+    }
+
+    private ProtocolUnit buildPing(List<String> args) {
+        if (args.size() != 0)
+            return new InvalidUnit();
+
+        return new PingUnit();
+    }
+
+    private ProtocolUnit buildPong(List<String> args) {
+        if (args.size() != 0)
+            return new InvalidUnit();
+
+        return new PongUnit();
     }
 
     private Long parseLong(String str) {

@@ -70,4 +70,14 @@ public interface DefaultProtocolVisitor extends ProtocolVisitor {
     default Optional<ProtocolUnit> visit(AuthTokenUnit unit) {
         return visitDefault(unit);
     }
+
+    @Override
+    default Optional<ProtocolUnit> visit(PingUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
+    default Optional<ProtocolUnit> visit(PongUnit unit) {
+        return visitDefault(unit);
+    }
 }

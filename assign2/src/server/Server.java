@@ -22,7 +22,7 @@ import structs.SyncMessageQueue;
 import structs.security.TokenManager;
 import structs.storage.AuthFileStore;
 import utils.ConfigUtils;
-import utils.SSLSocketUtils;
+import utils.SocketUtils;
 
 public class Server {
 
@@ -63,8 +63,11 @@ public class Server {
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
+                SocketUtils.configureSocket(socket);
 
-                ProtocolPort port = new SocketProtocolPort(socket, parser);
+                ProtocolPort port = new SocketProtocolPort(() -> socket, parser);
+                port.connect();
+
                 MessageQueue queue = new SyncMessageQueue();
                 ClientThread clientThread = new ClientThread(this, port, queue, null);
 
@@ -78,7 +81,6 @@ public class Server {
             e.printStackTrace();
         }
     }
-
 
     public static void main(String[] args) {
         Path usersDBPath = Path.of(System.getProperty("user.dir"),
@@ -110,7 +112,7 @@ public class Server {
 
         ServerSocket serverSocket;
         try {
-            serverSocket = SSLSocketUtils.newServerSocket(port, password, keystorePath);
+            serverSocket = SocketUtils.newSSLServerSocket(port, password, keystorePath);
         } catch (Exception e) {
             e.printStackTrace();
             return;
