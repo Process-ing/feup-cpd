@@ -25,7 +25,7 @@ import utils.ConfigUtils;
 import utils.SocketUtils;
 
 public class Server {
-    private static final String CONFIG_PATH = "config.properties";
+    private static final String CONFIG_PATH = "server.properties";
     private static final String USERS_DB_PATH = "users.db";
 
     private final ServerSocket serverSocket;

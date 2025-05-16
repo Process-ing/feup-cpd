@@ -10,20 +10,20 @@ public final class SessionStore {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_ROOM = "room";
 
-    private final String filepath;
+    private final String filename;
     private final Properties properties;
 
-    public SessionStore(String filepath, Properties properties) throws IOException {
-        this.filepath = filepath;
+    public SessionStore(String filename, Properties properties) {
+        this.filename = filename;
         this.properties = properties;
     }
 
-    public SessionStore(String filepath) throws IOException {
-        this(filepath, ConfigUtils.loadConfig(filepath));
+    public SessionStore(String filename) throws IOException {
+        this(filename, ConfigUtils.loadConfig(filename));
     }
 
     public void save() throws IOException {
-        ConfigUtils.saveConfig(filepath, properties);
+        ConfigUtils.saveConfig(filename, properties);
     }
 
     public boolean hasSession() {
