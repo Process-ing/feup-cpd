@@ -29,7 +29,7 @@ import utils.ConfigUtils;
 import utils.SocketUtils;
 
 public class Client {
-    private static final String SESSION_PATH = "session.properties";
+    private static final String SESSION_PATH_FORMAT = "session%s.properties";
     private static final String CONFIG_PATH = "client.properties";
 
     private final ProtocolPort port;
@@ -68,7 +68,6 @@ public class Client {
     public void run() {
         done = false;
         setState(new GuestState(this));
-
         restoreSession();
 
         Thread.ofVirtual().start(() -> {
@@ -115,6 +114,15 @@ public class Client {
                 ProtocolUnit unit = port.receive();
                 if (unit instanceof EofUnit) {
                     port.connect();
+
+                    ClientState oldState = state;
+                    state = new GuestState(this);
+                    restoreSession();
+                    this.setState(oldState);
+
+                    if (state instanceof RoomState roomState && port.isConnected())
+                        port.send(roomState.getSync());
+
                     continue;
                 }
 
@@ -189,13 +197,23 @@ public class Client {
         }
     }
 
+    private static void printUsage() {
+        System.out.println("Usage: java client.Client [<session-suffix>]");
+    }
+
     public static void main(String[] args) {
-        // TODO(Process-ing): Replace with real code
+        if (args.length > 1) {
+            printUsage();
+            return;
+        }
+
+        String sessionSuffix = args.length == 1 ? "-" + args[0] : "";
         Properties config;
         SessionStore session;
+
         try {
             config = ConfigUtils.loadConfig(CONFIG_PATH);
-            session = new SessionStore(SESSION_PATH);
+            session = new SessionStore(String.format(SESSION_PATH_FORMAT, sessionSuffix));
         } catch (IOException e) {
             e.printStackTrace();
             return;

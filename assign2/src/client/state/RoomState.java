@@ -59,7 +59,7 @@ public class RoomState extends ClientState {
         } catch (Exception e) {
             System.err.println("Failed to save session: " + e.getMessage());
         }
-        
+
         return Optional.empty();
     }
 
@@ -73,10 +73,14 @@ public class RoomState extends ClientState {
         }
 
         if (unit.id() > lastId + 1) { // Missing messages
-            return Optional.of(new SyncUnit(lastId));
+            return Optional.of(getSync());
         }
 
         // Messages already received, ignore
         return Optional.empty();
+    }
+
+    public ProtocolUnit getSync() {
+        return new SyncUnit(lastId);
     }
 }
