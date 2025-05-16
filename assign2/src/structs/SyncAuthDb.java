@@ -1,7 +1,6 @@
 package structs;
 
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -20,14 +19,14 @@ public class SyncAuthDb implements AuthDb {
     private final ReentrantReadWriteLock.ReadLock readLock;
     private final ReentrantReadWriteLock.WriteLock writeLock;
 
-    public SyncAuthDb(Path file) throws IOException {
+    public SyncAuthDb(AuthFileStore store, TokenManager tokenManager) throws IOException {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         this.readLock = lock.readLock();
         this.writeLock = lock.writeLock();
 
-        this.store = new AuthFileStore(file);
+        this.store = store;
         this.creds = new HashMap<>(store.load());
-        this.tokenManager = new TokenManager();
+        this.tokenManager = tokenManager;
     }
 
     @Override

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -21,6 +20,7 @@ import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
 import structs.security.TokenManager;
+import structs.storage.AuthFileStore;
 import utils.ConfigUtils;
 import utils.SSLSocketUtils;
 
@@ -31,7 +31,7 @@ public class Server {
     private final Map<String, Room> roomMap;
     private final ProtocolParser parser;
 
-    public Server(ServerSocket serverSocket, AuthDb authDb, TokenManager tokens, ProtocolParser parser) {
+    public Server(ServerSocket serverSocket, AuthDb authDb, ProtocolParser parser) {
         this.serverSocket = serverSocket;
         this.authDb = authDb;
         this.parser = parser;
@@ -118,15 +118,17 @@ public class Server {
 
         AuthDb authDb;
         try {
-            authDb = new SyncAuthDb(usersDBPath);
+            AuthFileStore store = new AuthFileStore(usersDBPath);
+            TokenManager tokens = new TokenManager();
+            authDb = new SyncAuthDb(store, tokens);
         } catch (IOException e) {
             System.err.println("Failed to load user DB: " + e.getMessage());
             return;
         }
 
         ProtocolParser parser = new ProtocolParserImpl();
-        TokenManager tokens = new TokenManager();
-        Server server = new Server(serverSocket, authDb, tokens, parser);
+
+        Server server = new Server(serverSocket, authDb, parser);
 
         server.run();
     }
