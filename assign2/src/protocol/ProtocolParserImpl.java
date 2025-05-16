@@ -3,6 +3,7 @@ package protocol;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 import protocol.unit.AuthTokenUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
@@ -54,13 +55,9 @@ public class ProtocolParserImpl implements ProtocolParser {
         if (handler == null)
             return new InvalidUnit();
 
-        if (firstSpaceIndex == string.length()) {
-            return handler.apply(List.of());
-        }
-
-        List<String> tokens = ProtocolUtils.tokenize(string.substring(firstSpaceIndex + 1));
-
-        return handler.apply(tokens);
+        String argString = string.substring(firstSpaceIndex).strip();
+        List<String> args = ProtocolUtils.tokenize(argString);
+        return handler.apply(args);
     }
 
     private ProtocolUnit buildLogin(List<String> args) {
