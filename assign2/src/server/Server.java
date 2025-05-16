@@ -25,6 +25,8 @@ import utils.ConfigUtils;
 import utils.SocketUtils;
 
 public class Server {
+    private static final String CONFIG_PATH = "config.properties";
+    private static final String USERS_DB_PATH = "users.db";
 
     private final ServerSocket serverSocket;
     private final AuthDb authDb;
@@ -83,13 +85,9 @@ public class Server {
     }
 
     public static void main(String[] args) {
-        Path usersDBPath = Path.of(System.getProperty("user.dir"),
-                         "..", "data", "db.cpd").toAbsolutePath();
-        String configFilepath = "server.properties";
-
         Properties config;
         try {
-            config = ConfigUtils.loadConfig(configFilepath);
+            config = ConfigUtils.loadConfig(CONFIG_PATH);
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -120,9 +118,10 @@ public class Server {
 
         AuthDb authDb;
         try {
-            AuthFileStore store = new AuthFileStore(usersDBPath);
+            AuthFileStore store = new AuthFileStore(Path.of(USERS_DB_PATH));
             TokenManager tokens = new TokenManager();
             authDb = new SyncAuthDb(store, tokens);
+
         } catch (IOException e) {
             System.err.println("Failed to load user DB: " + e.getMessage());
             return;
@@ -131,6 +130,7 @@ public class Server {
         ProtocolParser parser = new ProtocolParserImpl();
 
         Server server = new Server(serverSocket, authDb, parser);
+        System.out.printf("Server started on port %d%n", port);
 
         server.run();
     }

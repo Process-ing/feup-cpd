@@ -8,8 +8,6 @@ import exception.EndpointUnreachableException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -27,33 +25,28 @@ import protocol.unit.InvalidUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
-import structs.Message;
 import utils.ConfigUtils;
 import utils.SocketUtils;
 
 public class Client {
+    private static final String SESSION_PATH = "session.properties";
+    private static final String CONFIG_PATH = "client.properties";
+
     private final ProtocolPort port;
     private ClientState state;
-    private final List<Message> messages;
     private final ProtocolParser parser;
     private ProtocolUnit previousUnit;
     private final SessionStore session;
     private boolean done = false;
 
 
-    public Client(ProtocolPort port, ClientState initState, ProtocolParser parser) {
-        this(port, initState, List.of(), parser);
-    }
-
-    public Client(ProtocolPort port, ClientState initState, List<Message> messages, ProtocolParser parser) {
+    public Client(ProtocolPort port, ClientState initState, ProtocolParser parser, SessionStore session) {
         this.port = port;
         this.state = initState;
         this.state.setClient(this);
-        this.messages = new ArrayList<>(messages);
         this.parser = parser;
         this.previousUnit = null;
-        this.session = new SessionStore(Path.of(System.getProperty("user.dir"),
-                             "..", "client", "data", "session.properties"));
+        this.session = session;
     }
 
     public ProtocolUnit getPreviousUnit() {
@@ -70,10 +63,6 @@ public class Client {
 
     public void setState(ClientState state) {
         this.state = state;
-    }
-
-    public void receiveMessage(Message message) {
-        messages.add(message);
     }
 
     public void run() {
@@ -202,11 +191,11 @@ public class Client {
 
     public static void main(String[] args) {
         // TODO(Process-ing): Replace with real code
-        String configFilepath = "client.properties";
-
         Properties config;
+        SessionStore session;
         try {
-            config = ConfigUtils.loadConfig(configFilepath);
+            config = ConfigUtils.loadConfig(CONFIG_PATH);
+            session = new SessionStore(SESSION_PATH);
         } catch (IOException e) {
             e.printStackTrace();
             return;
@@ -249,7 +238,7 @@ public class Client {
         }
 
         ClientState initState = new GuestState(null);
-        Client client = new Client(protocolPort, initState, parser);
+        Client client = new Client(protocolPort, initState, parser, session);
 
         client.run();
     }
