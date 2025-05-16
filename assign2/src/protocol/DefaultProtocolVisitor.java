@@ -1,7 +1,6 @@
 package protocol;
 
 import java.util.Optional;
-
 import protocol.unit.*;
 
 public interface DefaultProtocolVisitor extends ProtocolVisitor {
@@ -54,6 +53,11 @@ public interface DefaultProtocolVisitor extends ProtocolVisitor {
 
     @Override
     default Optional<ProtocolUnit> visit(EofUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
+    default Optional<ProtocolUnit> visit(AuthTokenUnit unit) {
         return visitDefault(unit);
     }
 }

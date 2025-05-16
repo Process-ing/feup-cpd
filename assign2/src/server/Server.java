@@ -3,29 +3,29 @@ package server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Random;
-
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
-import server.client.RoomUser;
-import server.client.User;
+import server.client.Guest;
 import server.room.Room;
-import server.room.RoomImpl;
 import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
+import structs.security.TokenManager;
+import structs.storage.AuthFileStore;
 import utils.ConfigUtils;
 import utils.SSLSocketUtils;
 
 public class Server {
+
     private final ServerSocket serverSocket;
     private final AuthDb authDb;
     private final Map<String, Room> roomMap;
@@ -56,10 +56,9 @@ public class Server {
 
     public void run() {
         // TODO(Process-ing): Convert to real code
-        System.out.println("Server is listening on port " + serverSocket.getLocalPort());
 
-        Room room = new RoomImpl("Lobby");
-        addRoom(room);
+        // Room room = new RoomImpl("Lobby");
+        // addRoom(room);
 
         try {
             while (true) {
@@ -69,7 +68,8 @@ public class Server {
                 MessageQueue queue = new SyncMessageQueue();
                 ClientThread clientThread = new ClientThread(this, port, queue, null);
 
-                RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
+                //RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
+                Guest user = new Guest(clientThread);
                 clientThread.setClient(user);
 
                 clientThread.start();
@@ -81,6 +81,8 @@ public class Server {
 
 
     public static void main(String[] args) {
+        Path usersDBPath = Path.of(System.getProperty("user.dir"),
+                         "..", "data", "db.cpd").toAbsolutePath();
         String configFilepath = "server.properties";
 
         Properties config;
@@ -114,8 +116,18 @@ public class Server {
             return;
         }
 
-        AuthDb authDb = new SyncAuthDb();
+        AuthDb authDb;
+        try {
+            AuthFileStore store = new AuthFileStore(usersDBPath);
+            TokenManager tokens = new TokenManager();
+            authDb = new SyncAuthDb(store, tokens);
+        } catch (IOException e) {
+            System.err.println("Failed to load user DB: " + e.getMessage());
+            return;
+        }
+
         ProtocolParser parser = new ProtocolParserImpl();
+
         Server server = new Server(serverSocket, authDb, parser);
 
         server.run();

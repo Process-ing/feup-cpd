@@ -1,12 +1,12 @@
 package server.client;
 
-import java.util.Optional;
-
 import exception.RoomCreationException;
+import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.EnterUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.LogoutUnit;
+import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import server.ClientThread;
 import server.Server;
@@ -15,15 +15,21 @@ import server.room.RoomImpl;
 
 public class User extends Client {
     private final String name;
+    private final String token;
 
-    public User(ClientThread thread, String name) {
+    public User(ClientThread thread, String name, String token) {
         super(thread);
 
         this.name = name;
+        this.token = token;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     @Override
@@ -47,7 +53,7 @@ public class User extends Client {
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNAUTHORIZED));
 
         thread.setClient(newUser.get());
-        return Optional.empty();
+        return Optional.of(new OkUnit(null));
     }
 
     @Override
@@ -56,7 +62,7 @@ public class User extends Client {
 
         thread.setClient(new Guest(thread));
 
-        return Optional.empty();
+        return Optional.of(new OkUnit(null));
     }
 
     @Override

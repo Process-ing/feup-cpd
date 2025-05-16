@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import protocol.unit.AuthTokenUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
@@ -26,6 +27,7 @@ public class ProtocolParserImpl implements ProtocolParser {
 
     public ProtocolParserImpl() {
         this.handlerMap = Map.ofEntries(
+            Map.entry("login-token", this::buildAuthToken),
             Map.entry("login", this::buildLogin),
             Map.entry("register", this::buildRegister),
             Map.entry("logout", this::buildLogout),
@@ -81,6 +83,7 @@ public class ProtocolParserImpl implements ProtocolParser {
     private ProtocolUnit buildLogout(List<String> args) {
         if (args.size() != 0)
             return new InvalidUnit();
+        
         return new LogoutUnit();
     }
 
@@ -128,5 +131,14 @@ public class ProtocolParserImpl implements ProtocolParser {
             return new InvalidUnit();
 
         return new ErrUnit(id.get());
+    }
+
+    private ProtocolUnit buildAuthToken(List<String> args) {
+        if (args.size() != 1) 
+            return new InvalidUnit();
+
+        String token = args.get(0);
+
+        return new AuthTokenUnit(token);
     }
 }

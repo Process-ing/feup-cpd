@@ -1,9 +1,10 @@
 package server.client;
 
-import java.util.Optional;
-
 import exception.NotInRoomException;
+import java.util.Optional;
 import protocol.unit.LeaveUnit;
+import protocol.unit.LogoutUnit;
+import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
 import server.ClientThread;
@@ -14,12 +15,14 @@ import structs.MessageQueue;
 public class RoomUser extends Client {
     private final String name;
     private final Room room;
+    private final String token;
 
-    public RoomUser(ClientThread thread, String name, Room room) {
+    public RoomUser(ClientThread thread, String name, Room room, String token) {
         super(thread);
 
         this.name = name;
         this.room = room;
+        this.token = token;
     }
 
     public String getName() {
@@ -28,6 +31,10 @@ public class RoomUser extends Client {
 
     public Room getRoom() {
         return room;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     @Override
@@ -50,7 +57,17 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(newUser.get());
-        return Optional.empty();
+        return Optional.of(new OkUnit("success"));
+    }
+
+    @Override
+    public Optional<ProtocolUnit> visit(LogoutUnit unit) {
+        Optional<User> newUser = room.disconnectUser(this);
+        if (newUser.isEmpty())
+            throw new NotInRoomException();
+        
+        getThread().setClient(new Guest(getThread()));
+        return Optional.of(new OkUnit("success"));
     }
 
     @Override

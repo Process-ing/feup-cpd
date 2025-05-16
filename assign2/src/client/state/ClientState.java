@@ -1,8 +1,7 @@
 package client.state;
 
-import java.util.Optional;
-
 import client.Client;
+import java.util.Optional;
 import protocol.DefaultProtocolVisitor;
 import protocol.unit.ProtocolUnit;
 
