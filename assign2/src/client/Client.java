@@ -112,6 +112,11 @@ public class Client {
             } catch (Exception e) {
                 System.out.println("Unrecoverable error: " + e.getMessage());
             } finally {
+                try {
+                    port.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 done = true;
             }
         });

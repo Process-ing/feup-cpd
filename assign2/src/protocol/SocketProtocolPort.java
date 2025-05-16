@@ -110,10 +110,12 @@ public class SocketProtocolPort implements ProtocolPort {
                     close();
                     return new EofUnit();
                 } catch (IOException e2) { // Connection reset by peer
+                    close();
                     return new EofUnit();
                 }
 
             } catch (IOException e) { // Connection reset by peer
+                close();
                 return new EofUnit();
             } finally {
                 readerLock.unlock();
