@@ -53,7 +53,9 @@ public class ClientThread {
                 Optional<Message> pendingMessage = queue.pop();
                 if (pendingMessage.isPresent()) {
                     ProtocolUnit unit = new RecvUnit(pendingMessage.get());
-                    port.send(unit);
+
+                    if (port.isConnected())
+                        port.send(unit);
                 }
             }
         } catch (IOException e) {

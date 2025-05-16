@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
 import exception.EndpointUnreachableException;
@@ -27,6 +28,7 @@ public class SocketProtocolPort implements ProtocolPort {
     private Optional<BufferedReader> reader;
     private Optional<PrintWriter> writer;
 
+    private final ReentrantReadWriteLock thisLock;
     private final ReentrantLock writerLock;
     private final ReentrantLock readerLock;
 
@@ -38,26 +40,35 @@ public class SocketProtocolPort implements ProtocolPort {
         this.reader = Optional.empty();
         this.writer = Optional.empty();
 
+        this.thisLock = new ReentrantReadWriteLock();
         this.readerLock = new ReentrantLock();
         this.writerLock = new ReentrantLock();
     }
 
-    public Socket getSocket() {
-        if (socket.isEmpty()) {
-            throw new IllegalStateException("Socket is not initialized");
+    public Optional<Socket> getSocket() {
+        thisLock.readLock().lock();
+        try {
+            return socket;
+        } finally {
+            thisLock.readLock().unlock();
         }
-
-        return socket.get();
     }
 
     @Override
     public void send(ProtocolUnit unit) throws IOException {
-        if (writer.isEmpty()) {
-            throw new IllegalStateException("Socket is not initialized");
+        PrintWriter writer;
+
+        thisLock.readLock().lock();
+        try {
+            if (this.writer.isEmpty()) {
+                throw new IllegalStateException("Socket is not initialized");
+            }
+            writer = this.writer.get();
+        } finally {
+            thisLock.readLock().unlock();
         }
 
         String serialized = unit.serialize();
-        PrintWriter writer = this.writer.get();
 
         writerLock.lock();
         try {
@@ -70,13 +81,19 @@ public class SocketProtocolPort implements ProtocolPort {
 
     @Override
     public ProtocolUnit receive() throws IOException {
-        if (reader.isEmpty()) {
-            throw new IllegalStateException("Socket is not initialized");
-        }
-
+        BufferedReader reader;
         String line;
         ProtocolUnit unit;
-        BufferedReader reader = this.reader.get();
+
+        thisLock.readLock().lock();
+        try {
+            if (this.reader.isEmpty()) {
+                throw new IllegalStateException("Socket is not initialized");
+            }
+            reader = this.reader.get();
+        } finally {
+            thisLock.readLock().unlock();
+        }
 
         while (true) {
             readerLock.lock();
@@ -123,54 +140,70 @@ public class SocketProtocolPort implements ProtocolPort {
 
     @Override
     public void connect() throws EndpointUnreachableException, IOException {
-        if (socket.isPresent()) {
-            return;
-        }
-
-        long backoff = INITIAL_BACKOFF;
-        for (int tries = 0; tries < MAX_RETRIES; tries++) {
-            socket = Optional.ofNullable(socketFactory.get());
-            if (socket.isPresent())
-                break;
-
-            System.err.println("Connection to server failed, retrying...");
-            backoff *= 2;
-
-            try {
-                Thread.sleep(backoff);
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-                break;
+        thisLock.writeLock().lock();
+        try {
+            if (socket.isPresent()) {
+                return;
             }
+
+            long backoff = INITIAL_BACKOFF;
+            for (int tries = 0; tries < MAX_RETRIES; tries++) {
+                socket = Optional.ofNullable(socketFactory.get());
+                if (socket.isPresent())
+                    break;
+
+                System.err.println("Connection to server failed, retrying...");
+                backoff *= 2;
+
+                try {
+                    Thread.sleep(backoff);
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                    break;
+                }
+            }
+
+            if (socket.isEmpty()) {
+                throw new EndpointUnreachableException("Could not establish a connection to the server");
+            }
+
+            Socket newSocket = socket.get();
+
+            var input = newSocket.getInputStream();
+            reader = Optional.of(new BufferedReader(new InputStreamReader(input)));
+
+            var output = newSocket.getOutputStream();
+            writer = Optional.of(new PrintWriter(output, true));
+        } finally {
+            thisLock.writeLock().unlock();
         }
-
-        if (socket.isEmpty()) {
-            throw new EndpointUnreachableException("Could not establish a connection to the server");
-        }
-
-        Socket newSocket = socket.get();
-
-        var input = newSocket.getInputStream();
-        reader = Optional.of(new BufferedReader(new InputStreamReader(input)));
-
-        var output = newSocket.getOutputStream();
-        writer = Optional.of(new PrintWriter(output, true));
     }
 
     @Override
     public boolean isConnected() {
-        return socket.isPresent();
+        thisLock.readLock().lock();
+        try {
+            return socket.isPresent();
+        } finally {
+            thisLock.readLock().unlock();
+        }
     }
 
     @Override
     public void close() throws IOException {
-        if (socket.isEmpty()) {
-            return;
-        }
+        thisLock.writeLock().lock();
+        try {
+            if (socket.isEmpty()) {
+                return;
+            }
 
-        socket.get().close();
-        reader = Optional.empty();
-        writer = Optional.empty();
-        socket = Optional.empty();
+            socket.get().close();
+            reader = Optional.empty();
+            writer = Optional.empty();
+            socket = Optional.empty();
+
+        } finally {
+            thisLock.writeLock().unlock();
+        }
     }
 }
