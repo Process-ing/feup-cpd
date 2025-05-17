@@ -11,3 +11,9 @@ cd build
 java server.Server
 java client.Client
 ```
+
+Start Ollama:
+```
+docker compose up -d
+docker compose exec ollama ollama pull llama3
+```
