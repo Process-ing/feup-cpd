@@ -21,7 +21,7 @@ import structs.MessageTable;
 import structs.SyncMessageTable;
 
 public class AIRoom implements Room {
-    private static final int WINDOW = 50;
+    private static final int WINDOW = 8;
 
     private final String name;
     private final Map<String, RoomUser> userMap;
@@ -86,7 +86,6 @@ public class AIRoom implements Room {
     @Override
     public Message addMessage(String content, RoomUser author) {
         Message message = messageTable.add(author, content);
-        
         String prompt = buildPrompt();
 
         taskQueue.add(() -> {
@@ -154,6 +153,7 @@ public class AIRoom implements Room {
         List<Message> recent = messageTable.getLast(WINDOW);
         StringBuilder prompt = new StringBuilder();
 
+        prompt.append(String.format("You are a chat bot in a room with different human users. Here are the last %d messages: ", recent.size()));
         for (Message message: recent) {
             prompt.append(String.format("%s:%s;", message.getUsername(), message.getContent()));
         }
