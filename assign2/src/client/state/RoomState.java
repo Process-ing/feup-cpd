@@ -8,17 +8,20 @@ import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.SendUnit;
+import protocol.unit.RecvUnit;
+import protocol.unit.SyncUnit;
 
 public class RoomState extends ClientState {
     private final String username;
     private final String roomName;
+    private int lastId;
 
     public RoomState(Client client, String username, String roomName) {
         super(client);
 
         this.username = username;
         this.roomName = roomName;
+        this.lastId = -1;
     }
 
     public String getUsername() {
@@ -51,13 +54,33 @@ public class RoomState extends ClientState {
             }
         }
 
-        session.save();
+        try {
+            session.save();
+        } catch (Exception e) {
+            System.err.println("Failed to save session: " + e.getMessage());
+        }
+
         return Optional.empty();
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(SendUnit unit) {
-        System.out.printf("%s# %s\n", unit.username(), unit.message());
+    public Optional<ProtocolUnit> visit(RecvUnit unit) {
+        if (unit.id() == lastId + 1 || lastId == -1) {
+            System.out.printf("%s# %s\n", unit.username() == username ? "You" : unit.username(), unit.message());
+            lastId = unit.id();
+
+            return Optional.empty();
+        }
+
+        if (unit.id() > lastId + 1) { // Missing messages
+            return Optional.of(getSync());
+        }
+
+        // Messages already received, ignore
         return Optional.empty();
+    }
+
+    public ProtocolUnit getSync() {
+        return new SyncUnit(lastId);
     }
 }

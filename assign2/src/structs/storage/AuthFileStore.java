@@ -11,23 +11,24 @@ import java.util.stream.Stream;
 import structs.CredentialRecord;
 
 public final class AuthFileStore {
-
     private final Path path;
     private final String NAME_SEP = ":";
     private final String REGEX_PWD_SEP = "\\$";
     private final String FILE_PWD_SEP = "$";
 
-    public AuthFileStore(Path path) { 
-        this.path = path; 
+    public AuthFileStore(Path path) {
+        this.path = path;
     }
 
     public Map<String, CredentialRecord> load() throws IOException {
         if (!Files.exists(path)) {
             Path parent = path.getParent();
-            if (parent != null) Files.createDirectories(path.getParent());
+            if (parent != null)
+                Files.createDirectories(path.getParent());
+
             Files.createFile(path);
             return Map.of();
-        } 
+        }
 
         Map<String, CredentialRecord> out = new HashMap<>();
 
@@ -35,13 +36,15 @@ public final class AuthFileStore {
             lines.map(String::trim)
                 .filter(line -> !line.isBlank())
                 .forEach(line -> {
-                    String[] up = line.split(NAME_SEP, 2);
-                    if (up.length != 2)
+                    String[] userPass = line.split(NAME_SEP, 2);
+                    if (userPass.length != 2)
                         throw new IllegalStateException("Malformed entry: " + line);
-                    String[] sh = up[1].split(REGEX_PWD_SEP, 2);
-                    if (sh.length != 2)
+
+                    String[] saltHash = userPass[1].split(REGEX_PWD_SEP, 2);
+                    if (saltHash.length != 2)
                         throw new IllegalStateException("Missing salt/hash: " + line);
-                    out.put(up[0], new CredentialRecord(sh[0], sh[1]));
+
+                    out.put(userPass[0], new CredentialRecord(saltHash[0], saltHash[1]));
                 });
         }
 
@@ -49,9 +52,9 @@ public final class AuthFileStore {
     }
 
     public void append(String user, CredentialRecord rec) throws IOException {
-        String line = user + NAME_SEP + 
-                    rec.saltHex() + FILE_PWD_SEP + 
-                    rec.hashHex() + System.lineSeparator();
+        String line = user + NAME_SEP +
+            rec.saltHex() + FILE_PWD_SEP +
+            rec.hashHex() + System.lineSeparator();
 
         Files.writeString(path, line, StandardOpenOption.APPEND);
     }

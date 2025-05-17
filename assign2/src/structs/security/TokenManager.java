@@ -10,31 +10,39 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public final class TokenManager {
-    
     private static final int TOKEN_BYTES = 32;
     private static final Duration TTL = Duration.ofHours(24);
 
-    private final Map<String, Session> byToken = new HashMap<>();
-    private final Map<String, String>  byUser  = new HashMap<>();
+    private static record Session(String username, String token, Instant issued) {}
 
-    private final SecureRandom RNG = new SecureRandom();
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Map<String, Session> userSessionMap;
+    private final Map<String, String> tokenUserMap;
 
+    private final SecureRandom rng;
+    private final ReentrantReadWriteLock lock;
+
+    public TokenManager() {
+        this.userSessionMap = new HashMap<>();
+        this.tokenUserMap = new HashMap<>();
+
+        this.rng = new SecureRandom();
+        this.lock = new ReentrantReadWriteLock();
+    }
 
     public String issue(String username) {
         byte[] buf = new byte[TOKEN_BYTES];
-        RNG.nextBytes(buf);
-        String token = Base64.getUrlEncoder().withoutPadding()
-                             .encodeToString(buf);
+        rng.nextBytes(buf);
 
-        Session s = new Session(username, token, Instant.now());
+        String token = Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(buf);
+
+        Session session = new Session(username, token, Instant.now());
 
         lock.writeLock().lock();
         try {
-            String old = byUser.put(username, s.token());
-            if (old != null) byToken.remove(old);
-
-            byToken.put(token, s);
+            tokenUserMap.put(username, session.token());
+            userSessionMap.put(token, session);
         } finally { lock.writeLock().unlock(); }
 
         return token;
@@ -43,13 +51,14 @@ public final class TokenManager {
     public Optional<String> validate(String token) {
         lock.readLock().lock();
         try {
-            Session s = byToken.get(token);
-            if (s == null) return Optional.empty();
-            if (s.issued().plus(TTL).isBefore(Instant.now())) return Optional.empty();
+            Session session = userSessionMap.get(token);
+            if (session == null)
+                return Optional.empty();
 
-            return Optional.of(s.username());
+            if (session.issued().plus(TTL).isBefore(Instant.now()))
+                return Optional.empty();
+
+            return Optional.of(session.username());
         } finally { lock.readLock().unlock(); }
     }
-
-    private static record Session(String username, String token, Instant issued) {}
 }

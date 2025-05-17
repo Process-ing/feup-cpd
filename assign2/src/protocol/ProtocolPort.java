@@ -10,9 +10,8 @@ public interface ProtocolPort {
 
     ProtocolUnit receive() throws IOException;
 
-    void reconnect() throws EndpointUnreachableException, IOException;
-
-    boolean isClosed();
+    void connect() throws EndpointUnreachableException, IOException;
+    boolean isConnected();
 
     void close() throws IOException;
 }

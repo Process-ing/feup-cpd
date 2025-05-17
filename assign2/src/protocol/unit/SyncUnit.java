@@ -4,10 +4,10 @@ import java.util.Optional;
 
 import protocol.ProtocolVisitor;
 
-public record EofUnit() implements ProtocolUnit {
+public record SyncUnit(int vectorClock) implements ProtocolUnit {
     @Override
     public String serialize() {
-        return "EOF";
+        return String.format("sync %d", vectorClock);
     }
 
     @Override

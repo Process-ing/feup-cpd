@@ -8,11 +8,12 @@ import exception.EndpointUnreachableException;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.function.Supplier;
+
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -24,33 +25,28 @@ import protocol.unit.InvalidUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
-import structs.Message;
 import utils.ConfigUtils;
-import utils.SSLSocketUtils;
+import utils.SocketUtils;
 
 public class Client {
+    private static final String SESSION_PATH_FORMAT = "session%s.properties";
+    private static final String CONFIG_PATH = "client.properties";
+
     private final ProtocolPort port;
     private ClientState state;
-    private final List<Message> messages;
     private final ProtocolParser parser;
     private ProtocolUnit previousUnit;
     private final SessionStore session;
     private boolean done = false;
 
 
-    public Client(ProtocolPort port, ClientState initState, ProtocolParser parser) {
-        this(port, initState, List.of(), parser);
-    }
-
-    public Client(ProtocolPort port, ClientState initState, List<Message> messages, ProtocolParser parser) {
+    public Client(ProtocolPort port, ClientState initState, ProtocolParser parser, SessionStore session) {
         this.port = port;
         this.state = initState;
         this.state.setClient(this);
-        this.messages = new ArrayList<>(messages);
         this.parser = parser;
         this.previousUnit = null;
-        this.session = new SessionStore(Path.of(System.getProperty("user.dir"),
-                             "..", "client", "data", "session.properties"));
+        this.session = session;
     }
 
     public ProtocolUnit getPreviousUnit() {
@@ -69,14 +65,9 @@ public class Client {
         this.state = state;
     }
 
-    public void receiveMessage(Message message) {
-        messages.add(message);
-    }
-
     public void run() {
         done = false;
         setState(new GuestState(this));
-
         restoreSession();
 
         Thread.ofVirtual().start(() -> {
@@ -85,25 +76,23 @@ public class Client {
                     try {
                         String input = scanner.nextLine();
                         ProtocolUnit request = null;
-        
+
                         if (input.startsWith("/")) {
                             request = parser.parse(input.substring(1));
-                        } else if (state instanceof RoomState roomState) {
-                            request = new SendUnit(roomState.getUsername(), input);
+                        } else if (state instanceof RoomState) {
+                            request = new SendUnit(input);
                         }
-        
+
                         if (request == null || request instanceof InvalidUnit) {
                             System.out.println("Invalid command");
                             continue;
                         }
-        
-                        port.send(request);
-        
-                        if (request instanceof SendUnit sendUnit) {
-                            System.out.printf("You# %s\n", sendUnit.message());
-                            continue;
-                        }
+
+                        if (port.isConnected())
+                            port.send(request);
+
                         previousUnit = request;
+
                     } catch (Exception e) {
                         System.out.println("Unexpected error: " + e.getMessage());
                     }
@@ -111,20 +100,36 @@ public class Client {
             } catch (Exception e) {
                 System.out.println("Unrecoverable error: " + e.getMessage());
             } finally {
+                try {
+                    port.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 done = true;
             }
         });
-
 
         try {
             while (!done) {
                 ProtocolUnit unit = port.receive();
                 if (unit instanceof EofUnit) {
-                    port.reconnect();
+                    port.connect();
+
+                    ClientState oldState = state;
+                    state = new GuestState(this);
+                    restoreSession();
+                    this.setState(oldState);
+
+                    if (state instanceof RoomState roomState && port.isConnected())
+                        port.send(roomState.getSync());
+
                     continue;
                 }
 
-                unit.accept(state);
+                Optional<ProtocolUnit> response = unit.accept(state);
+                if (response.isPresent()) {
+                    port.send(response.get());
+                }
             }
         } catch (EndpointUnreachableException e) {
             System.out.println("Connection to server lost, terminating.");
@@ -141,12 +146,12 @@ public class Client {
     }
 
     private void restoreSession() {
-        if (!session.hasSession()) return;
+        if (!session.hasSession())
+            return;
 
         ProtocolUnit request, unit;
-        
+
         try {
-            // login-token
             request = new AuthTokenUnit(session.getToken());
             port.send(request);
             previousUnit = request;
@@ -178,19 +183,44 @@ public class Client {
         }
     }
 
-    public static void main(String[] args) {
-        // TODO(Process-ing): Replace with real code
-        String configFilepath = "client.properties";
 
-        Properties config;
+    private static Socket createSocket(InetAddress address, int port, String password, String truststorePath) {
         try {
-            config = ConfigUtils.loadConfig(configFilepath);
+            Socket socket = SocketUtils.newSSLSocket(address, port, password, truststorePath);
+            SocketUtils.configureSocket(socket);
+            System.out.println(socket.getLocalPort());
+
+            return socket;
+
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    private static void printUsage() {
+        System.out.println("Usage: java client.Client [<session-suffix>]");
+    }
+
+    public static void main(String[] args) {
+        if (args.length > 1) {
+            printUsage();
+            return;
+        }
+
+        String sessionSuffix = args.length == 1 ? "-" + args[0] : "";
+        Properties config;
+        SessionStore session;
+
+        try {
+            config = ConfigUtils.loadConfig(CONFIG_PATH);
+            session = new SessionStore(String.format(SESSION_PATH_FORMAT, sessionSuffix));
         } catch (IOException e) {
             e.printStackTrace();
             return;
         }
 
-        List<String> missingKeys = ConfigUtils.getMissing(config, List.of("host", "port", "truststore-password", "truststore"));
+        List<String> missingKeys = ConfigUtils.getMissing(config,
+                List.of("host", "port", "truststore-password", "truststore"));
         if (!missingKeys.isEmpty()) {
             System.err.println("Missing configuration keys: " + missingKeys);
             return;
@@ -215,19 +245,18 @@ public class Client {
         String password = config.getProperty("truststore-password");
 
         ProtocolParser parser = new ProtocolParserImpl();
-        Socket socket;
-        ProtocolPort protocolPort;
+        Supplier<Socket> socketFactory = () -> createSocket(address, port, password, truststorePath);
+        ProtocolPort protocolPort = new SocketProtocolPort(socketFactory, parser);
 
         try {
-            socket = SSLSocketUtils.newSocket(address, port, password, truststorePath);
-            protocolPort = new SocketProtocolPort(socket, parser);
-        } catch (IOException e) {
-            e.printStackTrace();
+            protocolPort.connect();
+        } catch (IOException | EndpointUnreachableException e) {
+            System.err.printf("Failed to connect to server at %s:%d: %s%n", host, port, e.getMessage());
             return;
         }
 
         ClientState initState = new GuestState(null);
-        Client client = new Client(protocolPort, initState, parser);
+        Client client = new Client(protocolPort, initState, parser, session);
 
         client.run();
     }

@@ -63,4 +63,9 @@ public class RoomImpl implements Room {
     public List<Message> getMessages() {
         return messageTable.getAll();
     }
+
+    @Override
+    public List<Message> getMessages(int firstId) {
+        return messageTable.getFrom(firstId);
+    }
 }

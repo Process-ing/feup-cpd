@@ -37,6 +37,16 @@ public interface DefaultProtocolVisitor extends ProtocolVisitor {
     }
 
     @Override
+    default Optional<ProtocolUnit> visit(RecvUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
+    default Optional<ProtocolUnit> visit(SyncUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
     default Optional<ProtocolUnit> visit(OkUnit unit) {
         return visitDefault(unit);
     }
@@ -58,6 +68,16 @@ public interface DefaultProtocolVisitor extends ProtocolVisitor {
 
     @Override
     default Optional<ProtocolUnit> visit(AuthTokenUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
+    default Optional<ProtocolUnit> visit(PingUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
+    default Optional<ProtocolUnit> visit(PongUnit unit) {
         return visitDefault(unit);
     }
 }

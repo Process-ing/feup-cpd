@@ -4,10 +4,10 @@ import java.util.Optional;
 
 import protocol.ProtocolVisitor;
 
-public record EofUnit() implements ProtocolUnit {
+public record PingUnit() implements ProtocolUnit {
     @Override
     public String serialize() {
-        return "EOF";
+        return "ping";
     }
 
     @Override

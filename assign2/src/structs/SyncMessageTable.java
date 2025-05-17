@@ -66,4 +66,21 @@ public class SyncMessageTable implements MessageTable {
 
         return messages;
     }
+
+    @Override
+    public List<Message> getFrom(int id) {
+        List<Message> messages;
+
+        readLock.lock();
+        try {
+            if (id >= 0 && id < this.messages.size())
+                messages = Collections.unmodifiableList(this.messages.subList(id, this.messages.size()));
+            else
+                messages = Collections.emptyList();
+        } finally {
+            readLock.unlock();
+        }
+
+        return messages;
+    }
 }

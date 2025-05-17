@@ -16,4 +16,5 @@ public interface Room {
 
     Message addMessage(String content, RoomUser author);
     List<Message> getMessages();
+    List<Message> getMessages(int firstId);
 }

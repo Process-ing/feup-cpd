@@ -1,12 +1,15 @@
 package server.client;
 
-import exception.NotInRoomException;
+import java.util.List;
 import java.util.Optional;
+
+import exception.NotInRoomException;
 import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.SendUnit;
+import protocol.unit.SyncUnit;
 import server.ClientThread;
 import server.room.Room;
 import structs.Message;
@@ -42,11 +45,22 @@ public class RoomUser extends Client {
         Message message = room.addMessage(unit.message(), this);
 
         for (RoomUser user: room.getOnlineUsers()) {
-            if (!name.equals(user.name)) {
-                MessageQueue userQueue = user.getThread().getMessageQueue();
-                userQueue.push(message);
-            }
+            MessageQueue userQueue = user.getThread().getMessageQueue();
+            userQueue.push(message);
         }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<ProtocolUnit> visit(SyncUnit unit) {
+        MessageQueue queue = getThread().getMessageQueue();
+
+        int lastId = unit.vectorClock();
+        List<Message> missingMessages = room.getMessages(lastId + 1);
+
+        queue.pushAll(missingMessages);
+
         return Optional.empty();
     }
 
@@ -65,7 +79,7 @@ public class RoomUser extends Client {
         Optional<User> newUser = room.disconnectUser(this);
         if (newUser.isEmpty())
             throw new NotInRoomException();
-        
+
         getThread().setClient(new Guest(getThread()));
         return Optional.of(new OkUnit("success"));
     }

@@ -6,14 +6,14 @@ import protocol.ProtocolUtils;
 import protocol.ProtocolVisitor;
 import structs.Message;
 
-public record SendUnit(String message) implements ProtocolUnit {
-    public SendUnit(Message message) {
-        this(message.content());
+public record RecvUnit(int id, String username, String message) implements ProtocolUnit {
+    public RecvUnit(Message message) {
+        this(message.id(), message.username(), message.content());
     }
 
     @Override
     public String serialize() {
-        return String.format("send %s", ProtocolUtils.escapeToken(message));
+        return String.format("recv %d %s %s", id, username, ProtocolUtils.escapeToken(message));
     }
 
     @Override
