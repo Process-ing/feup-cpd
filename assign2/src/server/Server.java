@@ -9,11 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+
+import exception.RoomCreationException;
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import server.client.Guest;
+import server.room.AIRoom;
 import server.room.Room;
 import structs.AuthDb;
 import structs.MessageQueue;
@@ -56,11 +59,20 @@ public class Server {
         return roomMap.putIfAbsent(room.getName(), room) == null;
     }
 
+    public void createAIRooms() {
+        Room room = new AIRoom("AI");
+        if(!addRoom(room)) 
+            throw new RoomCreationException("Failed to assign room to server");
+        
+        System.out.println("AI room created");
+    }
+    
     public void run() {
         // TODO(Process-ing): Convert to real code
 
         // Room room = new RoomImpl("Lobby");
         // addRoom(room);
+        createAIRooms();
 
         try {
             while (true) {
@@ -83,7 +95,7 @@ public class Server {
             e.printStackTrace();
         }
     }
-
+    
     public static void main(String[] args) {
         Properties config;
         try {
