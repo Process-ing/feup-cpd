@@ -83,4 +83,23 @@ public class SyncMessageTable implements MessageTable {
 
         return messages;
     }
+
+    @Override
+    public List<Message> getLast(int count) {
+        List<Message> messages;
+
+        readLock.lock();
+        try {
+            if (this.messages.isEmpty()) {
+                messages = Collections.emptyList();
+            } else {
+                int start = Math.max(0, this.messages.size() - Math.max(0, count));
+                messages = Collections.unmodifiableList(this.messages.subList(start, this.messages.size()));
+            }
+        } finally {
+            readLock.unlock();
+        }
+
+        return messages;
+    }
 }

@@ -59,20 +59,20 @@ public class Server {
         return roomMap.putIfAbsent(room.getName(), room) == null;
     }
 
-    public void createAIRooms() {
-        Room room = new AIRoom("AI");
-        if(!addRoom(room)) 
-            throw new RoomCreationException("Failed to assign room to server");
-        
-        System.out.println("AI room created");
+    public void createAIRooms(int count) {
+        for (var c = 1; c <= count; c++) {
+            Room room = new AIRoom("AI" + c);
+            if(!addRoom(room)) 
+                throw new RoomCreationException("Failed to assign room to server");
+        }
     }
-    
+
     public void run() {
         // TODO(Process-ing): Convert to real code
 
         // Room room = new RoomImpl("Lobby");
         // addRoom(room);
-        createAIRooms();
+        createAIRooms(5);
 
         try {
             while (true) {
