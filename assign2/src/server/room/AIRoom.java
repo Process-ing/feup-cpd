@@ -118,6 +118,8 @@ public class AIRoom implements Room {
                 }
             """.formatted(prompt);
 
+            // System.out.println("Prompt: " + prompt);
+
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:11434/api/generate"))
@@ -131,12 +133,18 @@ public class AIRoom implements Room {
                 return null;
             
             String body = response.body();
-            Pattern p = Pattern.compile("\"response\"\\s*:\\s*\"(.*?)\"", Pattern.DOTALL);
+            // System.out.println("Response: " + body);
+            // TODO: fix this regex
+            Pattern p = Pattern.compile("\"response\"\\s*:\\s*\"(.*?)\",\"done\"", Pattern.DOTALL);
             Matcher m = p.matcher(body);
             if (!m.find())
                 return null;
-
+            
             String answer = m.group(1).strip();
+
+            answer = answer.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\");
+            
+            //System.out.println("Answer: " + answer);
 
             return answer;
         } catch (Exception e) {
@@ -150,7 +158,7 @@ public class AIRoom implements Room {
         StringBuilder prompt = new StringBuilder();
 
         for (Message message: recent) {
-            prompt.append(String.format("%s:%s;", message.getUsername(), message.getContent()));
+            prompt.append(String.format("%s:%s;", message.getUsername(), message.getContent()).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n"));
         }
 
         return prompt.toString();

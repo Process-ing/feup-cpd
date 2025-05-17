@@ -10,16 +10,20 @@ public class ProtocolUtils {
         string = string.strip();
         List<String> tokens = new ArrayList<>();
 
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"|(\\S+)");
+        Pattern pattern = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*)\"|([^\\s\"]+)");
         Matcher matcher = pattern.matcher(string);
         while (matcher.find()) {
-            tokens.add(matcher.group(matcher.group(1) != null ? 1 : 2));
+            if (matcher.group(1) != null) {
+                tokens.add(matcher.group(1).replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\"));
+            } else if (matcher.group(2) != null) {
+                tokens.add(matcher.group(2));
+            }
         }
 
         return tokens;
     }
 
-    public static String escapeToken(String token) {
-        return "\"" + token.replace("\"", "\\\"") + "\"";
+    public static String escapeToken(String token) {      
+        return "\"" + token.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
     }
 }
