@@ -61,7 +61,7 @@ public class Server {
 
     public void createAIRooms(int count) {
         for (var c = 1; c <= count; c++) {
-            Room room = new AIRoom("AI" + c);
+            Room room = new AIRoom("ai" + c);
             if(!addRoom(room)) 
                 throw new RoomCreationException("Failed to assign room to server");
         }
@@ -70,9 +70,11 @@ public class Server {
     public void run() {
         // TODO(Process-ing): Convert to real code
 
-        // Room room = new RoomImpl("Lobby");
-        // addRoom(room);
-        createAIRooms(5);
+        try {
+            createAIRooms(5);
+        } catch (RoomCreationException e) {
+            System.err.println("Failed to create AI rooms: " + e.getMessage());
+        }
 
         try {
             while (true) {

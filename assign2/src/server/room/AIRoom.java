@@ -12,6 +12,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import protocol.ProtocolUtils;
 import server.client.RoomUser;
 import server.client.User;
 import structs.Message;
@@ -118,8 +119,6 @@ public class AIRoom implements Room {
                 }
             """.formatted(prompt);
 
-            // System.out.println("Prompt: " + prompt);
-
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create("http://localhost:11434/api/generate"))
@@ -133,20 +132,18 @@ public class AIRoom implements Room {
                 return null;
             
             String body = response.body();
-            // System.out.println("Response: " + body);
-            // TODO: fix this regex
-            Pattern p = Pattern.compile("\"response\"\\s*:\\s*\"(.*?)\",\"done\"", Pattern.DOTALL);
+
+            // This was done using regex to make it less hardcoded
+            // another option would be to substring between "response":" and ","done":
+            Pattern p = Pattern.compile("\"response\":\"((?:[^\"\\\\]|\\\\.)*+)\",\"done\":");
             Matcher m = p.matcher(body);
+
             if (!m.find())
                 return null;
             
             String answer = m.group(1).strip();
-
-            answer = answer.replace("\\n", "\n").replace("\\\"", "\"").replace("\\\\", "\\");
-            
-            //System.out.println("Answer: " + answer);
-
-            return answer;
+            return ProtocolUtils.unescape(answer);
+        
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -158,10 +155,10 @@ public class AIRoom implements Room {
         StringBuilder prompt = new StringBuilder();
 
         for (Message message: recent) {
-            prompt.append(String.format("%s:%s;", message.getUsername(), message.getContent()).replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n"));
+            prompt.append(String.format("%s:%s;", message.getUsername(), message.getContent()));
         }
 
-        return prompt.toString();
+        return ProtocolUtils.escape(prompt.toString());
     }
 
     private void broadcastMessage(String content) {
