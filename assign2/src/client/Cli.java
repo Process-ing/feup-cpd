@@ -12,14 +12,14 @@ public class Cli {
     private static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
     public static String getInput() {
-        String input = "";        
-        try {            
-            input = reader.readLine();        
-        } catch (IOException e) {            
-            e.printStackTrace();        
+        try {
+            String input = reader.readLine();
+            System.out.print("\033[F\r\033[2K");
+            return input;
+        } catch (IOException e) {
+            printError("Error reading input: " + e.getMessage());
+            return "";
         }
-        System.out.print("\033[F\r\033[2K");
-        return input;    
     }
 
     public static void printMessage(String username, String message, boolean isSelf) {
@@ -47,6 +47,7 @@ public class Cli {
     }
 
     public static void printInfo(ClientState state) {
+        System.out.println("\r\033[2K    \033[36mSession information\033[0m");
         switch (state) {
             case GuestState guestState -> {
                 System.out.println("Not logged in.");
@@ -67,7 +68,7 @@ public class Cli {
     }
 
     public static void printHelp(ClientState state) {
-        System.out.println("    Available commands");
+        System.out.println("\r\033[2K    \033[36mAvailable commands\033[0m");
         state.getAvailableCommands().forEach((_command, description) -> {
             System.out.printf("%s\n", description);
         });

@@ -23,8 +23,8 @@ public class GuestState extends ClientState {
         return Map.of(
             "help", "/help : Show available commands",
             "info", "/info : Show information about session",
-            "register", "/register <username> <password> : Register a new account",
-            "login", "/login <username> <password> : Login with existing account"
+            "register", "/register <username> <password> : Register new account",
+            "login", "/login <username> <password> : Login with account"
         );
     }
 
