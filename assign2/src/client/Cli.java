@@ -18,7 +18,15 @@ public class Cli {
         return input;    
     }
 
-    public static void printMessage(String username, String message) {
-        System.out.printf("\r\033[2K%s# %s\n", username, message);    
+    public static void printMessage(String username, String message, boolean isSelf) {
+        if (isSelf) {
+            System.out.printf("\r\033[2K\033[32m%s (You)\033[0m: %s\n", username, message);    
+        } else {
+            System.out.printf("\r\033[2K\033[33m%s\033[0m: %s\n", username, message);    
+        }
+    }
+
+    public static void printResponse(String response) {
+        System.out.printf("\r\033[2K\033[34m%s\033[0m\n", response);    
     }
 }

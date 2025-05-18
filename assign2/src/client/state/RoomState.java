@@ -40,12 +40,12 @@ public class RoomState extends ClientState {
 
         switch (previousUnit) {
             case LeaveUnit leaveUnit -> {
-                System.out.println("Left room: " + roomName);
+                Cli.printResponse("Left room: " + roomName);
                 client.setState(new AuthenticatedState(client, username));
                 session.setRoom(null);
             }
             case LogoutUnit logoutUnit -> {
-                System.out.println("Logged out");
+                Cli.printResponse("Logged out: " + username);
                 client.setState(new GuestState(client));
                 session.clear();
             }
@@ -66,7 +66,7 @@ public class RoomState extends ClientState {
     @Override
     public Optional<ProtocolUnit> visit(RecvUnit unit) {
         if (unit.id() == lastId + 1 || lastId == -1) {
-            Cli.printMessage(unit.username().equals(username) ? "You" : unit.username(), unit.message());
+            Cli.printMessage(unit.username(), unit.message(), unit.username().equals(username));
             lastId = unit.id();
 
             return Optional.empty();

@@ -1,9 +1,9 @@
 package client.state;
 
-import java.util.Optional;
-
+import client.Cli;
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.AuthTokenUnit;
 import protocol.unit.ErrUnit;
@@ -26,19 +26,19 @@ public class GuestState extends ClientState {
 
         switch (previousUnit) {
             case LoginUnit loginUnit -> {
-                System.out.println("Login successful: " + loginUnit.user());
+                Cli.printResponse("Login successful: " + loginUnit.user());
                 client.setState(new AuthenticatedState(client, loginUnit.user()));
                 session.setToken(token);
                 session.setUsername(loginUnit.user());
             }
             case RegisterUnit registerUnit -> {
-                System.out.println("Registration successful: " + registerUnit.user());
+                Cli.printResponse("Registration successful: " + registerUnit.user());
                 client.setState(new AuthenticatedState(client, registerUnit.user()));
                 session.setToken(token);
                 session.setUsername(registerUnit.user());
             }
             case AuthTokenUnit authTokenUnit -> {
-                System.out.println("Login successful: " + session.getUsername());
+                Cli.printResponse("Login successful: " + session.getUsername());
                 client.setState(new AuthenticatedState(client, session.getUsername()));
                 session.setToken(token);
             }

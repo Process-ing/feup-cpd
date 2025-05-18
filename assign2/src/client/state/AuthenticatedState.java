@@ -1,9 +1,9 @@
 package client.state;
 
-import java.util.Optional;
-
+import client.Cli;
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Optional;
 import protocol.unit.EnterUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -30,15 +30,14 @@ public class AuthenticatedState extends ClientState {
 
         switch (previousUnit) {
             case EnterUnit enterUnit -> {
-                System.out.println("Entered room: " + enterUnit.roomName());
+                Cli.printResponse("Entered room: " + enterUnit.roomName());
                 client.setState(new RoomState(client, username, enterUnit.roomName()));
                 session.setRoom(enterUnit.roomName());
             }
             case LogoutUnit logoutUnit -> {
-                System.out.println("Logged out: " + username);
+                Cli.printResponse("Logged out: " + username);
                 client.setState(new GuestState(client));
                 session.clear();
-                System.out.println("Session cleared");
             }
             default -> {
                 // No other actions should be possible in this state
