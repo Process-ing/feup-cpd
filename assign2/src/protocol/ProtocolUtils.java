@@ -28,41 +28,18 @@ public class ProtocolUtils {
     }
 
     public static String escape(String s) {
-        StringBuilder out = new StringBuilder();
-
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            switch (c) {
-                case '\\' -> out.append("\\\\");
-                case '"'  -> out.append("\\\"");
-                case '\n' -> out.append("\\n");
-                case '\r' -> out.append("\\r");
-                case '\t' -> out.append("\\t");
-                default   -> out.append(c);
-            }
-        }
-        
-        return out.toString();
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
     }
-    
-    public static String unescape(String s) {
-        StringBuilder out = new StringBuilder();
 
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (c == '\\' && i + 1 < s.length()) {
-                switch (s.charAt(++i)) {
-                    case 'n'  -> out.append('\n');
-                    case 'r'  -> out.append('\r');
-                    case 't'  -> out.append('\t');
-                    case '\\' -> out.append('\\');
-                    case '"'  -> out.append('"');
-                    default   -> out.append(s.charAt(i));
-                }
-            } else {
-                out.append(c);
-            }
-        }
-        return out.toString();
+    public static String unescape(String s) {
+        return s.replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\n", "\n")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");   
     }
 }

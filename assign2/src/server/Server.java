@@ -1,5 +1,6 @@
 package server;
 
+import exception.RoomCreationException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,8 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-
-import exception.RoomCreationException;
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -71,6 +70,7 @@ public class Server {
         // TODO(Process-ing): Convert to real code
 
         try {
+            // TODO: Improve AI Room creation
             createAIRooms(5);
         } catch (RoomCreationException e) {
             System.err.println("Failed to create AI rooms: " + e.getMessage());

@@ -21,7 +21,8 @@ import structs.MessageTable;
 import structs.SyncMessageTable;
 
 public class AIRoom implements Room {
-    private static final int WINDOW = 8;
+    // Number of messages to give to Ollama for context
+    private static final int CONTEXT_WINDOW = 8;
 
     private final String name;
     private final Map<String, RoomUser> userMap;
@@ -150,12 +151,12 @@ public class AIRoom implements Room {
     }
 
     private String buildPrompt() {
-        List<Message> recent = messageTable.getLast(WINDOW);
+        List<Message> recent = messageTable.getLast(CONTEXT_WINDOW);
         StringBuilder prompt = new StringBuilder();
 
         prompt.append(String.format("You are a chat bot in a room with different human users. Here are the last %d messages: ", recent.size()));
         for (Message message: recent) {
-            prompt.append(String.format("%s:%s;", message.getUsername(), message.getContent()));
+            prompt.append(String.format("%s:%s;", message.username(), message.content()));
         }
 
         return ProtocolUtils.escape(prompt.toString());
