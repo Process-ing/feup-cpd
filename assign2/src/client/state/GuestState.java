@@ -50,7 +50,7 @@ public class GuestState extends ClientState {
         try {
             session.save();
         } catch (Exception e) {
-            System.err.println("Failed to save session: " + e.getMessage());
+            Cli.printError("Failed to save session: " + e.getMessage());
         }
 
         return Optional.empty();
@@ -60,7 +60,7 @@ public class GuestState extends ClientState {
     public Optional<ProtocolUnit> visit(ErrUnit unit) {
         // TODO: isto se calhar vai ser alterado pelo CLI
         if (!unit.id().equals(ProtocolErrorIdentifier.LOGIN))
-            System.out.println("Error occurred during authentication: " + unit.id());
+            Cli.printError("Authentication error: " + unit.id());
         return Optional.empty();
     }
 }

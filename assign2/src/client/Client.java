@@ -82,7 +82,7 @@ public class Client {
                         }
 
                         if (request == null || request instanceof InvalidUnit) {
-                            System.out.println("Invalid command");
+                            Cli.printError("Invalid command");
                             continue;
                         }
 
@@ -92,11 +92,11 @@ public class Client {
                         previousUnit = request;
 
                     } catch (Exception e) {
-                        System.out.println("Unexpected error: " + e.getMessage());
+                        Cli.printError("Unexpected error: " + e.getMessage());
                     }
                 }
             } catch (Exception e) {
-                System.out.println("Unrecoverable error: " + e.getMessage());
+                Cli.printError("Unrecoverable error: " + e.getMessage());
             } finally {
                 try {
                     port.close();
@@ -130,14 +130,14 @@ public class Client {
                 }
             }
         } catch (EndpointUnreachableException e) {
-            System.out.println("Connection to server lost, terminating.");
+            Cli.printError("Connection to server lost, terminating.");
         } catch (IOException e) {
-            e.printStackTrace();
+            Cli.printError("Unexpected error: " + e.getMessage());
         } finally {
             try {
                 port.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Cli.printError("Unexpected error: " + e.getMessage());
             }
             done = true;
         }
@@ -157,7 +157,7 @@ public class Client {
             // respond
             unit = port.receive();
             if (unit instanceof EofUnit) {
-                System.out.println("Server closed connection");
+                Cli.printError("Server closed connection");
                 port.close();
             }
             unit.accept(state);
@@ -171,13 +171,13 @@ public class Client {
                 // respond
                 unit = port.receive();
                 if (unit instanceof EofUnit) {
-                    System.out.println("Server closed connection");
+                    Cli.printError("Server closed connection");
                     port.close();
                 }
                 unit.accept(state);
             }
         } catch (Exception e) {
-            System.out.println("Unexpected error: " + e.getMessage());
+            Cli.printError("Unexpected error: " + e.getMessage());
         }
     }
 

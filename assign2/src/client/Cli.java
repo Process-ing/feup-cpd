@@ -29,4 +29,8 @@ public class Cli {
     public static void printResponse(String response) {
         System.out.printf("\r\033[2K\033[34m%s\033[0m\n", response);    
     }
+
+    public static void printError(String error) {
+        System.out.printf("\r\033[2K\033[31m%s\033[0m\n", error);    
+    }
 }

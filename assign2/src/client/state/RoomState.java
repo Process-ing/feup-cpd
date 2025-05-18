@@ -57,7 +57,7 @@ public class RoomState extends ClientState {
         try {
             session.save();
         } catch (Exception e) {
-            System.err.println("Failed to save session: " + e.getMessage());
+            Cli.printError("Failed to save session: " + e.getMessage());
         }
 
         return Optional.empty();
