@@ -26,11 +26,19 @@ public class Cli {
         }
     }
 
-    public static void printResponse(String response) {
-        System.out.printf("\r\033[2K\033[34m%s\033[0m\n", response);    
+    public static void printResponse(String response, boolean forward) {
+        if (forward) {
+            System.out.printf("\r\033[2K\033[36m%s\033[0m\n", response);    
+        } else {
+            System.out.printf("\r\033[2K\033[35m%s\033[0m\n", response);    
+        }
     }
 
     public static void printError(String error) {
         System.out.printf("\r\033[2K\033[31m%s\033[0m\n", error);    
+    }
+
+    public static void printInfo(String info) {
+        System.out.printf("\r\033[2K\033[34m%s\033[0m\n", info);    
     }
 }

@@ -1,5 +1,7 @@
 package protocol;
 
+import client.Cli;
+import exception.EndpointUnreachableException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,8 +12,6 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
-
-import exception.EndpointUnreachableException;
 import protocol.unit.EofUnit;
 import protocol.unit.PingUnit;
 import protocol.unit.PongUnit;
@@ -154,7 +154,7 @@ public class SocketProtocolPort implements ProtocolPort {
                 if (socket.isPresent())
                     break;
 
-                System.err.println("Connection to server failed, retrying...");
+                Cli.printInfo("Connection to server failed, retrying...");
                 backoff *= 2;
 
                 try {

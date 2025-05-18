@@ -186,11 +186,11 @@ public class Client {
         try {
             Socket socket = SocketUtils.newSSLSocket(address, port, password, truststorePath);
             SocketUtils.configureSocket(socket);
-            System.out.println(socket.getLocalPort());
+            Cli.printInfo("Socket port: " + socket.getLocalPort());
 
             return socket;
-
         } catch (IOException e) {
+            Cli.printError("Failed to create socket: " + e.getMessage());
             return null;
         }
     }
@@ -213,14 +213,14 @@ public class Client {
             config = ConfigUtils.loadConfig(CONFIG_PATH);
             session = new SessionStore(String.format(SESSION_PATH_FORMAT, sessionSuffix));
         } catch (IOException e) {
-            e.printStackTrace();
+            Cli.printError("Failed to load config: " + e.getMessage());
             return;
         }
 
         List<String> missingKeys = ConfigUtils.getMissing(config,
                 List.of("host", "port", "truststore-password", "truststore"));
         if (!missingKeys.isEmpty()) {
-            System.err.println("Missing configuration keys: " + missingKeys);
+            Cli.printError("Missing configuration keys: " + missingKeys);
             return;
         }
 
@@ -229,13 +229,13 @@ public class Client {
         try {
             address = InetAddress.getByName(host);
         } catch (IOException e) {
-            System.err.printf("Invalid host name: %s%n", host);
+            Cli.printError("Invalid host name: " + host);
             return;
         }
 
         int port = ConfigUtils.getIntProperty(config, "port");
         if (port < 1024 || port > 65535) {
-            System.err.printf("Port number must be between 1024 and 65535, port %d provided.%n", port);
+            Cli.printError("Port number must be between 1024 and 65535, port " + port + " provided.");
             return;
         }
 
@@ -249,7 +249,7 @@ public class Client {
         try {
             protocolPort.connect();
         } catch (IOException | EndpointUnreachableException e) {
-            System.err.printf("Failed to connect to server at %s:%d: %s%n", host, port, e.getMessage());
+            Cli.printError("Failed to connect to server at " + host + ":" + port + ": " + e.getMessage());
             return;
         }
 
