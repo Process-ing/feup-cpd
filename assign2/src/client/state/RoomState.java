@@ -1,9 +1,9 @@
 package client.state;
 
-import java.util.Optional;
-
+import client.Cli;
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Optional;
 import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -66,7 +66,7 @@ public class RoomState extends ClientState {
     @Override
     public Optional<ProtocolUnit> visit(RecvUnit unit) {
         if (unit.id() == lastId + 1 || lastId == -1) {
-            System.out.printf("%s# %s\n", unit.username() == username ? "You" : unit.username(), unit.message());
+            Cli.printMessage(unit.username().equals(username) ? "You" : unit.username(), unit.message());
             lastId = unit.id();
 
             return Optional.empty();

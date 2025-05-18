@@ -11,9 +11,7 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Scanner;
 import java.util.function.Supplier;
-
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -71,10 +69,10 @@ public class Client {
         restoreSession();
 
         Thread.ofVirtual().start(() -> {
-            try (Scanner scanner = new Scanner(System.in)) {
+            try {
                 while (!done) {
                     try {
-                        String input = scanner.nextLine();
+                        String input = Cli.getInput();
                         ProtocolUnit request = null;
 
                         if (input.startsWith("/")) {
