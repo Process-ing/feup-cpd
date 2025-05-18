@@ -76,13 +76,24 @@ public class Client {
                         ProtocolUnit request = null;
 
                         if (input.startsWith("/")) {
-                            request = parser.parse(input.substring(1));
+                            String command = input.substring(1).split(" ")[0];
+                            if (!state.getAvailableCommands().containsKey(command)) {
+                                request = new InvalidUnit();
+                            } else if (command.equals("help")) {
+                                Cli.printHelp(state);
+                                continue;
+                            } else if (command.equals("info")) {
+                                Cli.printInfo(state);
+                                continue;
+                            } else {
+                                request = parser.parse(input.substring(1));
+                            }
                         } else if (state instanceof RoomState) {
                             request = new SendUnit(input);
                         }
 
                         if (request == null || request instanceof InvalidUnit) {
-                            Cli.printError("Invalid command");
+                            Cli.printError("Invalid command. Use /help to see available commands.");
                             continue;
                         }
 
@@ -186,7 +197,7 @@ public class Client {
         try {
             Socket socket = SocketUtils.newSSLSocket(address, port, password, truststorePath);
             SocketUtils.configureSocket(socket);
-            Cli.printInfo("Socket port: " + socket.getLocalPort());
+            Cli.printConnection("Socket port: " + socket.getLocalPort());
 
             return socket;
         } catch (IOException e) {

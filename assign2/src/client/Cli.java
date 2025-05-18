@@ -1,5 +1,9 @@
 package client;
 
+import client.state.AuthenticatedState;
+import client.state.ClientState;
+import client.state.GuestState;
+import client.state.RoomState;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,7 +42,37 @@ public class Cli {
         System.out.printf("\r\033[2K\033[31m%s\033[0m\n", error);    
     }
 
-    public static void printInfo(String info) {
+    public static void printConnection(String info) {
         System.out.printf("\r\033[2K\033[34m%s\033[0m\n", info);    
+    }
+
+    public static void printInfo(ClientState state) {
+        switch (state) {
+            case GuestState guestState -> {
+                System.out.println("Not logged in.");
+                break;
+            }
+            case AuthenticatedState authenticatedState -> {
+                System.out.printf("Logged in as: %s.\n", authenticatedState.getUsername());
+                break;
+            }
+            case RoomState roomState -> {
+                System.out.printf("Logged in as: %s. In room: %s\n", roomState.getUsername(), roomState.getRoomName());
+                break;
+            }
+            default -> {
+                System.out.println("Unknown state.");
+            }
+        }
+    }
+
+    public static void printHelp(ClientState state) {
+        System.out.println("    Available commands");
+        state.getAvailableCommands().forEach((_command, description) -> {
+            System.out.printf("%s\n", description);
+        });
+        if (state instanceof RoomState) {
+            System.out.printf("<message> : Send a message to the room\n");
+        }
     }
 }

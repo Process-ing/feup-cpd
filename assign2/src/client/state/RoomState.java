@@ -3,6 +3,7 @@ package client.state;
 import client.Cli;
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Map;
 import java.util.Optional;
 import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
@@ -30,6 +31,16 @@ public class RoomState extends ClientState {
 
     public String getRoomName() {
         return roomName;
+    }
+
+    @Override
+    public Map<String, String> getAvailableCommands() {
+        return Map.of(
+            "help", "/help : Show available commands",
+            "info", "/info : Show information about session",
+            "leave", "/leave : Leave the current room",
+            "logout", "/logout : Logout from current account"
+        );
     }
 
     @Override

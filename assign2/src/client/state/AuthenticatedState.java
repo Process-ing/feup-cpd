@@ -3,6 +3,7 @@ package client.state;
 import client.Cli;
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Map;
 import java.util.Optional;
 import protocol.unit.EnterUnit;
 import protocol.unit.LogoutUnit;
@@ -20,6 +21,16 @@ public class AuthenticatedState extends ClientState {
 
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public Map<String, String> getAvailableCommands() {
+        return Map.of(
+            "help", "/help : Show available commands",
+            "info", "/info : Show information about session",
+            "enter", "/enter <room> : Enter a room",
+            "logout", "/logout : Logout from current account"
+        );
     }
 
     @Override

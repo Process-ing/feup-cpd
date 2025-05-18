@@ -3,6 +3,7 @@ package client.state;
 import client.Cli;
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Map;
 import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.AuthTokenUnit;
@@ -15,6 +16,16 @@ import protocol.unit.RegisterUnit;
 public class GuestState extends ClientState {
     public GuestState(Client client) {
         super(client);
+    }
+
+    @Override
+    public Map<String, String> getAvailableCommands() {
+        return Map.of(
+            "help", "/help : Show available commands",
+            "info", "/info : Show information about session",
+            "register", "/register <username> <password> : Register a new account",
+            "login", "/login <username> <password> : Login with existing account"
+        );
     }
 
     @Override

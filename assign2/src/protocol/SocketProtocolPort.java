@@ -154,7 +154,7 @@ public class SocketProtocolPort implements ProtocolPort {
                 if (socket.isPresent())
                     break;
 
-                Cli.printInfo("Connection to server failed, retrying...");
+                Cli.printConnection("Connection to server failed, retrying...");
                 backoff *= 2;
 
                 try {
