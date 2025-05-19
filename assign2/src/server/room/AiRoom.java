@@ -20,7 +20,7 @@ import structs.MessageQueue;
 import structs.MessageTable;
 import structs.SyncMessageTable;
 
-public class AIRoom implements Room {
+public class AiRoom implements Room {
     // Number of messages to give to Ollama for context
     private static final int CONTEXT_WINDOW = 8;
 
@@ -31,7 +31,7 @@ public class AIRoom implements Room {
     private final RoomUser bot;
 
 
-    public AIRoom(String name) {
+    public AiRoom(String name) {
         this.name = name;
         this.userMap = new HashMap<>();
         this.messageTable = new SyncMessageTable();
@@ -71,6 +71,8 @@ public class AIRoom implements Room {
 
         RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this, user.getToken());
         userMap.put(newUser.getName(), newUser);
+        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name)));        
+        
         return Optional.of(newUser);
     }
 

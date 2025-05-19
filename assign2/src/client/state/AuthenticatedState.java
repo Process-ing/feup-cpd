@@ -1,9 +1,8 @@
 package client.state;
 
-import java.util.Optional;
-
 import client.Client;
 import client.storage.SessionStore;
+import java.util.Optional;
 import protocol.unit.EnterUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -30,7 +29,12 @@ public class AuthenticatedState extends ClientState {
 
         switch (previousUnit) {
             case EnterUnit enterUnit -> {
-                System.out.println("Entered room: " + enterUnit.roomName());
+                if (unit.data().equals("ai")) {
+                    System.out.println("Entered AI room: " + enterUnit.roomName());
+                    System.out.println("Hi, " + username + "! Welcome to the AI room " + enterUnit.roomName() + "! Asks questions and AI will answer.");
+                } else {
+                    System.out.println("Entered room: " + enterUnit.roomName());
+                }
                 client.setState(new RoomState(client, username, enterUnit.roomName()));
                 session.setRoom(enterUnit.roomName());
             }
