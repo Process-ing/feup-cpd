@@ -68,8 +68,18 @@ public class Client {
         setState(new GuestState(this));
         restoreSession();
 
-        Thread.ofVirtual().start(this::handleSending);
-        handleReceiving();
+
+        Thread sending = Thread.ofVirtual().unstarted(this::handleSending);
+        Thread receiving = Thread.ofVirtual().unstarted(this::handleReceiving);
+    
+        sending.start();
+        receiving.start();
+    
+        try {
+            receiving.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void handleSending() {
