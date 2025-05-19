@@ -35,7 +35,7 @@ public class Client {
     private final ProtocolParser parser;
     private ProtocolUnit previousUnit;
     private final SessionStore session;
-    private boolean done = false;
+    private boolean done;
 
 
     public Client(ProtocolPort port, ClientState initState, ProtocolParser parser, SessionStore session) {
@@ -45,6 +45,7 @@ public class Client {
         this.parser = parser;
         this.previousUnit = null;
         this.session = session;
+        this.done = false;
     }
 
     public ProtocolUnit getPreviousUnit() {
@@ -64,60 +65,59 @@ public class Client {
     }
 
     public void run() {
-        done = false;
         setState(new GuestState(this));
         restoreSession();
 
-        Thread.ofVirtual().start(() -> {
-            try {
-                while (!done) {
-                    try {
-                        String input = Cli.getInput();
-                        ProtocolUnit request = null;
+        Thread.ofVirtual().start(this::handleSending);
+        handleReceiving();
+    }
 
-                        if (input.startsWith("/")) {
-                            String command = input.substring(1).split(" ")[0];
-                            if (!state.getAvailableCommands().containsKey(command)) {
-                                request = new InvalidUnit();
-                            } else if (command.equals("help")) {
-                                Cli.printHelp(state);
-                                continue;
-                            } else if (command.equals("info")) {
-                                Cli.printInfo(state);
-                                continue;
-                            } else {
-                                request = parser.parse(input.substring(1));
-                            }
-                        } else if (state instanceof RoomState) {
-                            request = new SendUnit(input);
-                        }
-
-                        if (request == null || request instanceof InvalidUnit) {
-                            Cli.printError("Invalid command. Use /help to see available commands.");
-                            continue;
-                        }
-
-                        if (port.isConnected())
-                            port.send(request);
-
-                        previousUnit = request;
-
-                    } catch (Exception e) {
-                        Cli.printError("Unexpected error: " + e.getMessage());
-                    }
-                }
-            } catch (Exception e) {
-                Cli.printError("Unrecoverable error: " + e.getMessage());
-            } finally {
+    private void handleSending() {
+        try {
+            while (!done) {
                 try {
-                    port.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                done = true;
-            }
-        });
+                    String input = Cli.getInput();
+                    ProtocolUnit request = null;
 
+                    if (input.startsWith("/")) {
+                        String command = input.substring(1).split(" ")[0];
+                        if (!state.getAvailableCommands().containsKey(command)) {
+                            request = new InvalidUnit();
+                        } else if (command.equals("help")) {
+                            Cli.printHelp(state);
+                            continue;
+                        } else if (command.equals("info")) {
+                            Cli.printInfo(state);
+                            continue;
+                        } else {
+                            request = parser.parse(input.substring(1));
+                        }
+                    } else if (state instanceof RoomState) {
+                        request = new SendUnit(input);
+                    }
+
+                    if (request == null || request instanceof InvalidUnit) {
+                        Cli.printError("Invalid command. Use /help to see available commands.");
+                        continue;
+                    }
+
+                    if (port.isConnected())
+                        port.send(request);
+
+                    previousUnit = request;
+
+                } catch (Exception e) {
+                    Cli.printError("Unexpected error: " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            Cli.printError("Unrecoverable error: " + e.getMessage());
+        } finally {
+            cleanup();
+        }
+    }
+
+    private void handleReceiving() {
         try {
             while (!done) {
                 ProtocolUnit unit = port.receive();
@@ -145,13 +145,19 @@ public class Client {
         } catch (IOException e) {
             Cli.printError("Unexpected error: " + e.getMessage());
         } finally {
-            try {
-                port.close();
-            } catch (IOException e) {
-                Cli.printError("Unexpected error: " + e.getMessage());
-            }
-            done = true;
+            cleanup();
         }
+    }
+
+    private void cleanup() {
+        if (done)
+            return;
+        try {
+            port.close();
+        } catch (IOException e) {
+            Cli.printError("Unexpected error: " + e.getMessage());
+        }
+        done = true;
     }
 
     private void restoreSession() {
