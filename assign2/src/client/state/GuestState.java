@@ -37,19 +37,19 @@ public class GuestState extends ClientState {
 
         switch (previousUnit) {
             case LoginUnit loginUnit -> {
-                Cli.printResponse("Login successful: " + loginUnit.user(), true);
+                Cli.printResponse("Login successful: " + loginUnit.user());
                 client.setState(new AuthenticatedState(client, loginUnit.user()));
                 session.setToken(token);
                 session.setUsername(loginUnit.user());
             }
             case RegisterUnit registerUnit -> {
-                Cli.printResponse("Registration successful: " + registerUnit.user(), true);
+                Cli.printResponse("Registration successful: " + registerUnit.user());
                 client.setState(new AuthenticatedState(client, registerUnit.user()));
                 session.setToken(token);
                 session.setUsername(registerUnit.user());
             }
             case AuthTokenUnit authTokenUnit -> {
-                Cli.printResponse("Login successful: " + session.getUsername(), true);
+                Cli.printResponse("Login successful: " + session.getUsername());
                 client.setState(new AuthenticatedState(client, session.getUsername()));
                 session.setToken(token);
             }
