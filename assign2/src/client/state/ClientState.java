@@ -5,7 +5,7 @@ import java.util.Optional;
 import protocol.DefaultProtocolVisitor;
 import protocol.unit.ProtocolUnit;
 
-public abstract class ClientState implements DefaultProtocolVisitor {
+public abstract class ClientState implements DefaultProtocolVisitor<Optional<ProtocolUnit>> {
     private Client client;
 
     public ClientState(Client client) {

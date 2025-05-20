@@ -17,7 +17,7 @@ import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
-import protocol.unit.AuthTokenUnit;
+import protocol.unit.TokenLoginUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.OkUnit;
@@ -122,7 +122,7 @@ public class Client {
             while (!done) {
                 ProtocolUnit unit = port.receive();
                 if (unit instanceof EofUnit) {
-                    if (done)  // Connection closed by client
+                    if (done) // Connection closed by client
                         return;
 
                     port.connect();
@@ -171,7 +171,7 @@ public class Client {
         ProtocolUnit request, unit;
 
         try {
-            request = new AuthTokenUnit(session.getToken());
+            request = new TokenLoginUnit(session.getToken());
             port.send(request);
             previousUnit = request;
 
@@ -182,6 +182,8 @@ public class Client {
                 port.close();
             }
             unit.accept(state);
+
+            System.out.println(state);
 
             if (session.getRoom() != null && unit instanceof OkUnit) {
                 // enter <room-name>

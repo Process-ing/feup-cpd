@@ -8,7 +8,7 @@ import protocol.unit.ErrUnit;
 import protocol.unit.ProtocolUnit;
 import server.ClientThread;
 
-public abstract class Client implements DefaultProtocolVisitor {
+public abstract class Client implements DefaultProtocolVisitor<Optional<ProtocolUnit>> {
     private final ClientThread thread;
 
     public Client(ClientThread thread) {

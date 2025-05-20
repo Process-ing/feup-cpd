@@ -2,31 +2,32 @@ package client.state;
 
 import client.Cli;
 import client.Client;
+import client.state.confirm.GuestConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
 import protocol.ProtocolParser;
-import protocol.unit.AuthTokenUnit;
 import protocol.unit.ErrUnit;
-import protocol.unit.LoginUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.RegisterUnit;
 
 public class GuestState extends InteractiveClientState {
+    private final GuestConfirmer confirmer;
+
     public GuestState(Client client) {
         super(client);
+
+        this.confirmer = new GuestConfirmer(this);
     }
 
     @Override
     public Map<String, String> getAvailableCommands() {
         return Map.of(
-            "/help", "/help : Show available commands",
-            "/info", "/info : Show information about session",
-            "/register", "/register <username> <password> : Register new account",
-            "/login", "/login <username> <password> : Login with account"
-        );
+                "/help", "/help : Show available commands",
+                "/info", "/info : Show information about session",
+                "/register", "/register <username> <password> : Register new account",
+                "/login", "/login <username> <password> : Login with account");
     }
 
     @Override
@@ -44,31 +45,9 @@ public class GuestState extends InteractiveClientState {
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         Client client = this.getClient();
         SessionStore session = client.getSession();
-        String token = unit.data();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 
-        switch (previousUnit) {
-            case LoginUnit loginUnit -> {
-                Cli.printResponse("Login successful: " + loginUnit.user());
-                client.setState(new AuthenticatedState(client, loginUnit.user()));
-                session.setToken(token);
-                session.setUsername(loginUnit.user());
-            }
-            case RegisterUnit registerUnit -> {
-                Cli.printResponse("Registration successful: " + registerUnit.user());
-                client.setState(new AuthenticatedState(client, registerUnit.user()));
-                session.setToken(token);
-                session.setUsername(registerUnit.user());
-            }
-            case AuthTokenUnit authTokenUnit -> {
-                Cli.printResponse("Login successful: " + session.getUsername());
-                client.setState(new AuthenticatedState(client, session.getUsername()));
-                session.setToken(token);
-            }
-            default -> {
-                // No other actions should be possible in this state
-            }
-        }
+        previousUnit.accept(confirmer, unit);
 
         try {
             session.save();

@@ -1,13 +1,12 @@
 package protocol.unit;
 
 import protocol.ArgedProtocolVisitor;
-import protocol.ProtocolUtils;
 import protocol.ProtocolVisitor;
 
-public record EnterUnit(String roomName) implements ProtocolUnit {
+public record TokenLoginUnit(String token) implements ProtocolUnit {
     @Override
     public String serialize() {
-        return String.format("enter %s", ProtocolUtils.escapeToken(roomName));
+        return String.format("login-token %s", token);
     }
 
     @Override
