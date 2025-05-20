@@ -1,69 +1,43 @@
 package client.state;
 
-import java.util.Optional;
-
 import client.Cli;
 import client.BaseClient;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.EnterUnit;
-import protocol.unit.ErrUnit;
-import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 
-public class ReenterState extends NonInteractiveState {
-    private boolean enterSent;
-
+public class ReenterState extends WaitConfirmState {
     public ReenterState(BaseClient client) {
         super(client);
-
-        this.enterSent = false;
     }
 
     @Override
-    public Optional<ProtocolUnit> buildNextUnit() {
-        if (enterSent)
-            return Optional.empty();
-
+    protected ProtocolUnit buildUnitToSend() {
         BaseClient client = getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit unit = new EnterUnit(session.getRoom());
-
-        enterSent = true;
-        return Optional.of(unit);
+        return new EnterUnit(session.getRoom());
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(OkUnit unit) {
+    protected ClientState getStateOnConfirm() {
         BaseClient client = getClient();
-        SessionStore session = client.getSession();
+        SessionStore session =  client.getSession();
+        ClientState newState = new RoomState(client, session.getUsername(), session.getRoom());
 
-        client.setState(new RoomState(client, session.getUsername(), session.getRoom()));
         Cli.printResponse("Entered room: " + session.getRoom());
-
-        return Optional.empty();
+        return newState;
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(ErrUnit unit) {
-        if (unit.id() != ProtocolErrorIdentifier.UNAUTHORIZED)
-            return visitDefault(unit);
-
+    protected ClientState getStateOnError() {
         BaseClient client = getClient();
         SessionStore session = client.getSession();
-        String username = session.getUsername();
-
-        client.setState(new AuthenticatedState(client, username));
-
-        return Optional.empty();
+        return new AuthenticatedState(client, session.getUsername());
     }
 
     @Override
-    public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
-        BaseClient client = getClient();
-        SessionStore session = client.getSession();
-        ProtocolUnit response = new EnterUnit(session.getRoom());
-
-        return Optional.of(response);
+    protected ProtocolErrorIdentifier getErrorIdentifier() {
+        return ProtocolErrorIdentifier.UNAUTHORIZED;
     }
 }

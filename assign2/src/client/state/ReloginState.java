@@ -1,70 +1,44 @@
 package client.state;
 
-import java.util.Optional;
-
 import client.Cli;
 import client.BaseClient;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
-import protocol.unit.ErrUnit;
-import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.TokenLoginUnit;
 
-public class ReloginState extends NonInteractiveState {
-    private boolean loginSent;
-
+public class ReloginState extends WaitConfirmState {
     public ReloginState(BaseClient client) {
         super(client);
-
-        this.loginSent = false;
     }
 
     @Override
-    public Optional<ProtocolUnit> buildNextUnit() {
-        if (loginSent)
-            return Optional.empty();
-
+    protected ProtocolUnit buildUnitToSend() {
         BaseClient client = getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit unit = new TokenLoginUnit(session.getToken());
-
-        loginSent = true;
-        return Optional.of(unit);
+        return new TokenLoginUnit(session.getToken());
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(OkUnit unit) {
+    protected ClientState getStateOnConfirm() {
         BaseClient client = getClient();
         SessionStore session =  client.getSession();
         ClientState newState = session.getRoom() == null
                 ? new AuthenticatedState(client, session.getUsername())
                 : new ReenterState(client);
 
-
-        client.setState(newState);
         Cli.printResponse("Login successful: " + session.getUsername());
-
-        return Optional.empty();
+        return newState;
     }
 
     @Override
-    public Optional<ProtocolUnit> visit(ErrUnit unit) {
-        if (unit.id() != ProtocolErrorIdentifier.LOGIN)
-            return visitDefault(unit);
-
+    protected ClientState getStateOnError() {
         BaseClient client = getClient();
-        client.setState(new GuestState(client));
-
-        return Optional.empty();
+        return new GuestState(client);
     }
 
     @Override
-    public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
-        BaseClient client = getClient();
-        SessionStore session = client.getSession();
-        ProtocolUnit response = new TokenLoginUnit(session.getToken());
-
-        return Optional.of(response);
+    protected ProtocolErrorIdentifier getErrorIdentifier() {
+        return ProtocolErrorIdentifier.LOGIN;
     }
 }

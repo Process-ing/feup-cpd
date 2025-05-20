@@ -149,6 +149,13 @@ public abstract class BaseClient {
                             Thread.currentThread().interrupt();
                         }
                     }
+                    
+                } else {
+                    try {
+                        waitForStateUpdate();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
                 }
             }
         } finally {
