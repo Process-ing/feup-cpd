@@ -2,6 +2,7 @@ package client;
 
 import client.state.ClientState;
 import client.state.GuestState;
+import client.state.InteractiveClientState;
 import client.state.RoomState;
 import client.storage.SessionStore;
 import exception.EndpointUnreachableException;
@@ -19,10 +20,8 @@ import protocol.SocketProtocolPort;
 import protocol.unit.AuthTokenUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
-import protocol.unit.InvalidUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.SendUnit;
 import utils.ConfigUtils;
 import utils.SocketUtils;
 
@@ -36,7 +35,6 @@ public class Client {
     private ProtocolUnit previousUnit;
     private final SessionStore session;
     private boolean done;
-
 
     public Client(ProtocolPort port, ClientState initState, ProtocolParser parser, SessionStore session) {
         this.port = port;
@@ -60,6 +58,10 @@ public class Client {
         return session;
     }
 
+    public ProtocolParser getParser() {
+        return parser;
+    }
+
     public void setState(ClientState state) {
         this.state = state;
     }
@@ -68,13 +70,12 @@ public class Client {
         setState(new GuestState(this));
         restoreSession();
 
-
         Thread sending = Thread.ofVirtual().unstarted(this::handleSending);
         Thread receiving = Thread.ofVirtual().unstarted(this::handleReceiving);
-    
+
         sending.start();
         receiving.start();
-    
+
         try {
             receiving.join();
         } catch (InterruptedException e) {
@@ -85,43 +86,32 @@ public class Client {
     private void handleSending() {
         try {
             while (!done) {
-                try {
+                if (state instanceof InteractiveClientState interactiveState) {
                     String input = Cli.getInput();
-                    ProtocolUnit request = null;
 
-                    if (input.startsWith("/")) {
-                        String command = input.substring(1).split(" ")[0];
-                        if (!state.getAvailableCommands().containsKey(command)) {
-                            request = new InvalidUnit();
-                        } else if (command.equals("help")) {
-                            Cli.printHelp(state);
-                            continue;
-                        } else if (command.equals("info")) {
-                            Cli.printInfo(state);
-                            continue;
+                    // State updates can be triggered while waiting for input
+                    if (state != interactiveState) {
+                        if (state instanceof InteractiveClientState newState) {
+                            interactiveState = newState;
                         } else {
-                            request = parser.parse(input.substring(1));
+                            continue;
                         }
-                    } else if (state instanceof RoomState) {
-                        request = new SendUnit(input);
                     }
 
-                    if (request == null || request instanceof InvalidUnit) {
-                        Cli.printError("Invalid command. Use /help to see available commands.");
+                    Optional<ProtocolUnit> unit = interactiveState.buildNextUnit(input);
+                    if (unit.isEmpty())
+                        continue;
+
+                    try {
+                        port.send(unit.get());
+                    } catch (IOException e) {
+                        Cli.printError("Failed to send message: " + e.getMessage());
                         continue;
                     }
 
-                    if (port.isConnected())
-                        port.send(request);
-
-                    previousUnit = request;
-
-                } catch (Exception e) {
-                    Cli.printError("Unexpected error: " + e.getMessage());
+                    previousUnit = unit.get();
                 }
             }
-        } catch (Exception e) {
-            Cli.printError("Unrecoverable error: " + e.getMessage());
         } finally {
             cleanup();
         }
@@ -132,6 +122,9 @@ public class Client {
             while (!done) {
                 ProtocolUnit unit = port.receive();
                 if (unit instanceof EofUnit) {
+                    if (done)  // Connection closed by client
+                        return;
+
                     port.connect();
 
                     ClientState oldState = state;
@@ -162,12 +155,13 @@ public class Client {
     private void cleanup() {
         if (done)
             return;
+
+        done = true;
         try {
             port.close();
         } catch (IOException e) {
             Cli.printError("Unexpected error: " + e.getMessage());
         }
-        done = true;
     }
 
     private void restoreSession() {
@@ -207,7 +201,6 @@ public class Client {
             Cli.printError("Unexpected error: " + e.getMessage());
         }
     }
-
 
     private static Socket createSocket(InetAddress address, int port, String password, String truststorePath) {
         try {

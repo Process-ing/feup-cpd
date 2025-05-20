@@ -1,12 +1,9 @@
 package client;
 
-import client.state.AuthenticatedState;
-import client.state.ClientState;
-import client.state.GuestState;
-import client.state.RoomState;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 public class Cli {
     private static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -24,52 +21,33 @@ public class Cli {
 
     public static void printMessage(String username, String message, boolean isSelf) {
         if (isSelf) {
-            System.out.printf("\r\033[2K\033[32m%s (You)\033[0m: %s\n", username, message);    
+            System.out.printf("\r\033[2K\033[32m%s (You)\033[0m: %s\n", username, message);
         } else {
-            System.out.printf("\r\033[2K\033[33m%s\033[0m: %s\n", username, message);    
+            System.out.printf("\r\033[2K\033[33m%s\033[0m: %s\n", username, message);
         }
     }
 
     public static void printResponse(String response) {
-        System.out.printf("\r\033[2K\033[36m%s\033[0m\n", response);    
+        System.out.printf("\r\033[2K\033[36m%s\033[0m\n", response);
     }
 
     public static void printError(String error) {
-        System.out.printf("\r\033[2K\033[31m%s\033[0m\n", error);    
+        System.out.printf("\r\033[2K\033[31m%s\033[0m\n", error);
     }
 
     public static void printConnection(String info) {
-        System.out.printf("\r\033[2K\033[34m%s\033[0m\n", info);    
+        System.out.printf("\r\033[2K\033[34m%s\033[0m\n", info);
     }
 
-    public static void printInfo(ClientState state) {
+    public static void printInfo(String info) {
         System.out.println("\r\033[2K    \033[36mSession information\033[0m");
-        switch (state) {
-            case GuestState guestState -> {
-                System.out.println("Not logged in.");
-                break;
-            }
-            case AuthenticatedState authenticatedState -> {
-                System.out.printf("Logged in as: %s.\n", authenticatedState.getUsername());
-                break;
-            }
-            case RoomState roomState -> {
-                System.out.printf("Logged in as: %s. In room: %s\n", roomState.getUsername(), roomState.getRoomName());
-                break;
-            }
-            default -> {
-                System.out.println("Unknown state.");
-            }
-        }
+        System.out.println(info);
     }
 
-    public static void printHelp(ClientState state) {
+    public static void printHelp(Map<String, String> availableCommands) {
         System.out.println("\r\033[2K    \033[36mAvailable commands\033[0m");
-        state.getAvailableCommands().forEach((_command, description) -> {
+        for (String description: availableCommands.values()) {
             System.out.printf("%s\n", description);
-        });
-        if (state instanceof RoomState) {
-            System.out.printf("<message> : Send a message to the room\n");
         }
     }
 }

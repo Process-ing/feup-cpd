@@ -1,7 +1,6 @@
 package client.state;
 
 import client.Client;
-import java.util.Map;
 import java.util.Optional;
 import protocol.DefaultProtocolVisitor;
 import protocol.unit.ProtocolUnit;
@@ -20,8 +19,6 @@ public abstract class ClientState implements DefaultProtocolVisitor {
     public void setClient(Client client) {
         this.client = client;
     }
-
-    public abstract Map<String, String> getAvailableCommands();
 
     @Override
     public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {

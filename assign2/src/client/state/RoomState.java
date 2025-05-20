@@ -5,14 +5,17 @@ import client.Client;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
+
+import protocol.ProtocolParser;
 import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RecvUnit;
+import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 
-public class RoomState extends ClientState {
+public class RoomState extends InteractiveClientState {
     private final String username;
     private final String roomName;
     private int lastId;
@@ -36,11 +39,26 @@ public class RoomState extends ClientState {
     @Override
     public Map<String, String> getAvailableCommands() {
         return Map.of(
-            "help", "/help : Show available commands",
-            "info", "/info : Show information about session",
-            "leave", "/leave : Leave the current room",
-            "logout", "/logout : Logout from current account"
+            "/help", "/help : Show available commands",
+            "/info", "/info : Show information about session",
+            "/leave", "/leave : Leave the current room",
+            "/logout", "/logout : Logout from current account",
+            "", "<message> : Send a message to the room"
         );
+    }
+
+    @Override
+    public String getInfo() {
+        return String.format("Logged in as '%s' in room '%s'.", username, roomName);
+    }
+
+    @Override
+    public ProtocolUnit buildResponse(String input) {
+        if (!input.startsWith("/"))
+            return new SendUnit(input);
+
+        ProtocolParser parser = getClient().getParser();
+        return parser.parse(input.substring(1));
     }
 
     @Override
