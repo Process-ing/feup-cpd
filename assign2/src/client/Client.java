@@ -127,10 +127,8 @@ public class Client {
 
                     port.connect();
 
-                    ClientState oldState = state;
                     state = new GuestState(this);
                     restoreSession();
-                    this.setState(oldState);
 
                     if (state instanceof RoomState roomState && port.isConnected())
                         port.send(roomState.getSync());
@@ -182,8 +180,6 @@ public class Client {
                 port.close();
             }
             unit.accept(state);
-
-            System.out.println(state);
 
             if (session.getRoom() != null && unit instanceof OkUnit) {
                 // enter <room-name>

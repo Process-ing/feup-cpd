@@ -2,13 +2,12 @@ package client.state;
 
 import client.Cli;
 import client.Client;
+import client.state.confirm.RoomConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
 
 import protocol.ProtocolParser;
-import protocol.unit.LeaveUnit;
-import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RecvUnit;
@@ -16,6 +15,7 @@ import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 
 public class RoomState extends InteractiveClientState {
+    private final RoomConfirmer confirmer;
     private final String username;
     private final String roomName;
     private int lastId;
@@ -23,6 +23,7 @@ public class RoomState extends InteractiveClientState {
     public RoomState(Client client, String username, String roomName) {
         super(client);
 
+        this.confirmer = new RoomConfirmer(this);
         this.username = username;
         this.roomName = roomName;
         this.lastId = -1;
@@ -67,21 +68,7 @@ public class RoomState extends InteractiveClientState {
         SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 
-        switch (previousUnit) {
-            case LeaveUnit leaveUnit -> {
-                Cli.printResponse("Left room: " + roomName);
-                client.setState(new AuthenticatedState(client, username));
-                session.setRoom(null);
-            }
-            case LogoutUnit logoutUnit -> {
-                Cli.printResponse("Logged out: " + username);
-                client.setState(new GuestState(client));
-                session.clear();
-            }
-            default -> {
-                // No other actions should be possible in this state
-            }
-        }
+        previousUnit.accept(confirmer, unit);
 
         try {
             session.save();

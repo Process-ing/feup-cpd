@@ -24,6 +24,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
         client.setState(new AuthenticatedState(client, unit.user()));
 
         String token = confirmation.data();
+        session.clear();
         session.setToken(token);
         session.setUsername(unit.user());
 

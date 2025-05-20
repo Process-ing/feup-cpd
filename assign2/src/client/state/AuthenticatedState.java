@@ -2,23 +2,24 @@ package client.state;
 
 import client.Cli;
 import client.Client;
+import client.state.confirm.AuthConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
 
 import protocol.ProtocolParser;
-import protocol.unit.EnterUnit;
-import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 
 public class AuthenticatedState extends InteractiveClientState {
     private final String username;
+    private final AuthConfirmer confirmer;
 
     public AuthenticatedState(Client client, String username) {
         super(client);
 
         this.username = username;
+        this.confirmer = new AuthConfirmer(this);
     }
 
     public String getUsername() {
@@ -52,21 +53,7 @@ public class AuthenticatedState extends InteractiveClientState {
         SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 
-        switch (previousUnit) {
-            case EnterUnit enterUnit -> {
-                Cli.printResponse("Entered room: " + enterUnit.roomName());
-                client.setState(new RoomState(client, username, enterUnit.roomName()));
-                session.setRoom(enterUnit.roomName());
-            }
-            case LogoutUnit logoutUnit -> {
-                Cli.printResponse("Logged out: " + username);
-                client.setState(new GuestState(client));
-                session.clear();
-            }
-            default -> {
-                // No other actions should be possible in this state
-            }
-        }
+        previousUnit.accept(confirmer, unit);
 
         try {
             session.save();
