@@ -3,6 +3,8 @@ package client;
 import client.state.ClientState;
 import client.state.GuestState;
 import client.state.InteractiveClientState;
+import client.state.NonInteractiveState;
+import client.state.ReloginState;
 import client.state.RoomState;
 import client.storage.SessionStore;
 import exception.EndpointUnreachableException;
@@ -12,15 +14,14 @@ import java.net.Socket;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
-import protocol.unit.TokenLoginUnit;
-import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
-import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import utils.ConfigUtils;
 import utils.SocketUtils;
@@ -34,7 +35,10 @@ public class Client {
     private final ProtocolParser parser;
     private ProtocolUnit previousUnit;
     private final SessionStore session;
+
     private boolean done;
+    private final ReentrantLock stateUpdateLock;
+    private final Condition stateUpdateCondition;
 
     public Client(ProtocolPort port, ClientState initState, ProtocolParser parser, SessionStore session) {
         this.port = port;
@@ -43,7 +47,10 @@ public class Client {
         this.parser = parser;
         this.previousUnit = null;
         this.session = session;
+
         this.done = false;
+        this.stateUpdateLock = new ReentrantLock();
+        this.stateUpdateCondition = stateUpdateLock.newCondition();
     }
 
     public ProtocolUnit getPreviousUnit() {
@@ -64,10 +71,25 @@ public class Client {
 
     public void setState(ClientState state) {
         this.state = state;
+
+        stateUpdateLock.lock();
+        try {
+            stateUpdateCondition.signalAll();
+        } finally {
+            stateUpdateLock.unlock();
+        }
+    }
+
+    public void waitForStateUpdate() throws InterruptedException {
+        stateUpdateLock.lock();
+        try {
+            stateUpdateCondition.signalAll();
+        } finally {
+            stateUpdateLock.unlock();
+        }
     }
 
     public void run() {
-        setState(new GuestState(this));
         restoreSession();
 
         Thread sending = Thread.ofVirtual().unstarted(this::handleSending);
@@ -77,6 +99,7 @@ public class Client {
         receiving.start();
 
         try {
+            sending.join();
             receiving.join();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -86,19 +109,19 @@ public class Client {
     private void handleSending() {
         try {
             while (!done) {
-                if (state instanceof InteractiveClientState interactiveState) {
+                if (state instanceof InteractiveClientState intState) {
                     String input = Cli.getInput();
 
                     // State updates can be triggered while waiting for input
-                    if (state != interactiveState) {
+                    if (state != intState) {
                         if (state instanceof InteractiveClientState newState) {
-                            interactiveState = newState;
+                            intState = newState;
                         } else {
                             continue;
                         }
                     }
 
-                    Optional<ProtocolUnit> unit = interactiveState.buildNextUnit(input);
+                    Optional<ProtocolUnit> unit = intState.buildNextUnit(input);
                     if (unit.isEmpty())
                         continue;
 
@@ -110,6 +133,23 @@ public class Client {
                     }
 
                     previousUnit = unit.get();
+
+                } else if (state instanceof NonInteractiveState nonInteractiveState) {
+                    Optional<ProtocolUnit> unit = nonInteractiveState.buildNextUnit();
+                    if (unit.isPresent()) {
+                        try {
+                            port.send(unit.get());
+                        } catch (IOException e) {
+                            Cli.printError("Failed to send message: " + e.getMessage());
+                            continue;
+                        }
+                    } else {
+                        try {
+                            waitForStateUpdate();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
                 }
             }
         } finally {
@@ -126,8 +166,6 @@ public class Client {
                         return;
 
                     port.connect();
-
-                    state = new GuestState(this);
                     restoreSession();
 
                     if (state instanceof RoomState roomState && port.isConnected())
@@ -163,41 +201,10 @@ public class Client {
     }
 
     private void restoreSession() {
-        if (!session.hasSession())
-            return;
-
-        ProtocolUnit request, unit;
-
-        try {
-            request = new TokenLoginUnit(session.getToken());
-            port.send(request);
-            previousUnit = request;
-
-            // respond
-            unit = port.receive();
-            if (unit instanceof EofUnit) {
-                Cli.printError("Server closed connection");
-                port.close();
-            }
-            unit.accept(state);
-
-            if (session.getRoom() != null && unit instanceof OkUnit) {
-                // enter <room-name>
-                request = new EnterUnit(session.getRoom());
-                port.send(request);
-                previousUnit = request;
-
-                // respond
-                unit = port.receive();
-                if (unit instanceof EofUnit) {
-                    Cli.printError("Server closed connection");
-                    port.close();
-                }
-                unit.accept(state);
-            }
-        } catch (Exception e) {
-            Cli.printError("Unexpected error: " + e.getMessage());
-        }
+        ClientState newState = session.getToken() != null
+            ? new ReloginState(this)
+            : new GuestState(this);
+        setState(newState);
     }
 
     private static Socket createSocket(InetAddress address, int port, String password, String truststorePath) {

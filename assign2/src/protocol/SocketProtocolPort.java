@@ -59,10 +59,11 @@ public class SocketProtocolPort implements ProtocolPort {
 
         thisLock.readLock().lock();
         try {
-            if (this.writer.isEmpty()) {
-                throw new IllegalStateException("Socket is not initialized");
-            }
+            if (this.writer.isEmpty())  // If connection closed, just act as message lost
+                return;
+
             writer = this.writer.get();
+
         } finally {
             thisLock.readLock().unlock();
         }
@@ -86,9 +87,9 @@ public class SocketProtocolPort implements ProtocolPort {
 
         thisLock.readLock().lock();
         try {
-            if (this.reader.isEmpty()) {
-                throw new IllegalStateException("Socket is not initialized");
-            }
+            if (this.reader.isEmpty())
+                return new EofUnit();
+                
             reader = this.reader.get();
         } finally {
             thisLock.readLock().unlock();
