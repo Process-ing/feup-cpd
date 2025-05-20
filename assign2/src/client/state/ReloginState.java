@@ -3,7 +3,7 @@ package client.state;
 import java.util.Optional;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.ErrUnit;
@@ -14,7 +14,7 @@ import protocol.unit.TokenLoginUnit;
 public class ReloginState extends NonInteractiveState {
     private boolean loginSent;
 
-    public ReloginState(Client client) {
+    public ReloginState(BaseClient client) {
         super(client);
 
         this.loginSent = false;
@@ -25,7 +25,7 @@ public class ReloginState extends NonInteractiveState {
         if (loginSent)
             return Optional.empty();
 
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session = client.getSession();
         ProtocolUnit unit = new TokenLoginUnit(session.getToken());
 
@@ -35,7 +35,7 @@ public class ReloginState extends NonInteractiveState {
 
     @Override
     public Optional<ProtocolUnit> visit(OkUnit unit) {
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session =  client.getSession();
         ClientState newState = session.getRoom() == null
                 ? new AuthenticatedState(client, session.getUsername())
@@ -53,7 +53,7 @@ public class ReloginState extends NonInteractiveState {
         if (unit.id() != ProtocolErrorIdentifier.LOGIN)
             return visitDefault(unit);
 
-        Client client = getClient();
+        BaseClient client = getClient();
         client.setState(new GuestState(client));
 
         return Optional.empty();
@@ -61,7 +61,7 @@ public class ReloginState extends NonInteractiveState {
 
     @Override
     public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session = client.getSession();
         ProtocolUnit response = new TokenLoginUnit(session.getToken());
 

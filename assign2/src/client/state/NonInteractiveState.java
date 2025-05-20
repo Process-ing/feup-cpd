@@ -2,11 +2,11 @@ package client.state;
 
 import java.util.Optional;
 
-import client.Client;
+import client.BaseClient;
 import protocol.unit.ProtocolUnit;
 
 public abstract class NonInteractiveState extends ClientState {
-    public NonInteractiveState(Client client) {
+    public NonInteractiveState(BaseClient client) {
         super(client);
     }
 

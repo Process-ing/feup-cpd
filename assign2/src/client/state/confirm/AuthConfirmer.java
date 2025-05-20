@@ -8,7 +8,7 @@ import client.storage.SessionStore;
 import protocol.unit.EnterUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
-import client.Client;
+import client.BaseClient;
 
 public class AuthConfirmer extends Confirmer<AuthenticatedState> {
     public AuthConfirmer(AuthenticatedState state) {
@@ -17,7 +17,7 @@ public class AuthConfirmer extends Confirmer<AuthenticatedState> {
 
     @Override
     public Void visit(EnterUnit unit, OkUnit arg) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
 
@@ -31,7 +31,7 @@ public class AuthConfirmer extends Confirmer<AuthenticatedState> {
 
     @Override
     public Void visit(LogoutUnit unit, OkUnit arg) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
 

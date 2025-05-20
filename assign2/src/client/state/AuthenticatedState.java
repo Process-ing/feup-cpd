@@ -1,7 +1,7 @@
 package client.state;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import client.state.confirm.AuthConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
@@ -15,7 +15,7 @@ public class AuthenticatedState extends InteractiveClientState {
     private final String username;
     private final AuthConfirmer confirmer;
 
-    public AuthenticatedState(Client client, String username) {
+    public AuthenticatedState(BaseClient client, String username) {
         super(client);
 
         this.username = username;
@@ -49,7 +49,7 @@ public class AuthenticatedState extends InteractiveClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(OkUnit unit) {
-        Client client = this.getClient();
+        BaseClient client = this.getClient();
         SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 

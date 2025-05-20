@@ -1,7 +1,7 @@
 package client.state;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import client.state.confirm.RoomConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
@@ -20,7 +20,7 @@ public class RoomState extends InteractiveClientState {
     private final String roomName;
     private int lastId;
 
-    public RoomState(Client client, String username, String roomName) {
+    public RoomState(BaseClient client, String username, String roomName) {
         super(client);
 
         this.confirmer = new RoomConfirmer(this);
@@ -64,7 +64,7 @@ public class RoomState extends InteractiveClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(OkUnit unit) {
-        Client client = this.getClient();
+        BaseClient client = this.getClient();
         SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 

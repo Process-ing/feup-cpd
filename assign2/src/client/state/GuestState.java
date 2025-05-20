@@ -1,7 +1,7 @@
 package client.state;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import client.state.confirm.GuestConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
@@ -15,7 +15,7 @@ import protocol.unit.ProtocolUnit;
 public class GuestState extends InteractiveClientState {
     private final GuestConfirmer confirmer;
 
-    public GuestState(Client client) {
+    public GuestState(BaseClient client) {
         super(client);
 
         this.confirmer = new GuestConfirmer(this);
@@ -43,7 +43,7 @@ public class GuestState extends InteractiveClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(OkUnit unit) {
-        Client client = this.getClient();
+        BaseClient client = this.getClient();
         SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 

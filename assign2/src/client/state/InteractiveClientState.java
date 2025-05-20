@@ -4,11 +4,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import protocol.unit.ProtocolUnit;
 
 public abstract class InteractiveClientState extends ClientState {
-    public InteractiveClientState(Client client) {
+    public InteractiveClientState(BaseClient client) {
         super(client);
     }
 

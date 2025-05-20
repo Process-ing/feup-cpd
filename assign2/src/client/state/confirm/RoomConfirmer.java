@@ -1,7 +1,7 @@
 package client.state.confirm;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import client.state.GuestState;
 import client.state.RoomState;
 import client.storage.SessionStore;
@@ -16,7 +16,7 @@ public class RoomConfirmer extends Confirmer<RoomState> {
 
     @Override
     public Void visit(LeaveUnit unit, OkUnit arg) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
 
@@ -30,7 +30,7 @@ public class RoomConfirmer extends Confirmer<RoomState> {
 
     @Override
     public Void visit(LogoutUnit unit, OkUnit arg) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
 

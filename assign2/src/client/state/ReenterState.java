@@ -3,7 +3,7 @@ package client.state;
 import java.util.Optional;
 
 import client.Cli;
-import client.Client;
+import client.BaseClient;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.EnterUnit;
@@ -14,7 +14,7 @@ import protocol.unit.ProtocolUnit;
 public class ReenterState extends NonInteractiveState {
     private boolean enterSent;
 
-    public ReenterState(Client client) {
+    public ReenterState(BaseClient client) {
         super(client);
 
         this.enterSent = false;
@@ -25,7 +25,7 @@ public class ReenterState extends NonInteractiveState {
         if (enterSent)
             return Optional.empty();
 
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session = client.getSession();
         ProtocolUnit unit = new EnterUnit(session.getRoom());
 
@@ -35,7 +35,7 @@ public class ReenterState extends NonInteractiveState {
 
     @Override
     public Optional<ProtocolUnit> visit(OkUnit unit) {
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session = client.getSession();
 
         client.setState(new RoomState(client, session.getUsername(), session.getRoom()));
@@ -49,7 +49,7 @@ public class ReenterState extends NonInteractiveState {
         if (unit.id() != ProtocolErrorIdentifier.UNAUTHORIZED)
             return visitDefault(unit);
 
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session = client.getSession();
         String username = session.getUsername();
 
@@ -60,7 +60,7 @@ public class ReenterState extends NonInteractiveState {
 
     @Override
     public Optional<ProtocolUnit> visitDefault(ProtocolUnit unit) {
-        Client client = getClient();
+        BaseClient client = getClient();
         SessionStore session = client.getSession();
         ProtocolUnit response = new EnterUnit(session.getRoom());
 

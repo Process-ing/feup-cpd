@@ -8,7 +8,7 @@ import protocol.unit.LoginUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.RegisterUnit;
 import protocol.unit.TokenLoginUnit;
-import client.Client;
+import client.BaseClient;
 
 public class GuestConfirmer extends Confirmer<GuestState> {
     public GuestConfirmer(GuestState state) {
@@ -16,7 +16,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
     }
 
     public Void visit(LoginUnit unit, OkUnit confirmation) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
 
         Cli.printResponse("Login successful: " + unit.user());
@@ -32,7 +32,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
     }
 
     public Void visit(RegisterUnit unit, OkUnit confirmation) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
 
         Cli.printResponse("Registration successful: " + unit.user());
@@ -48,7 +48,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
     }
 
     public Void visit(TokenLoginUnit unit, OkUnit confirmation) {
-        Client client = getState().getClient();
+        BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
 
         Cli.printResponse("Login successful: " + session.getUsername());
