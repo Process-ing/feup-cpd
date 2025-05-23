@@ -28,6 +28,7 @@ import utils.SocketUtils;
 public abstract class BaseClient {
     private static final String SESSION_PATH_FORMAT = "session%s.properties";
     private static final String CONFIG_PATH = "client.properties";
+    private static final int INPUT_DELAY = 100;
 
     private final ProtocolPort port;
     private ClientState state;
@@ -119,7 +120,7 @@ public abstract class BaseClient {
                 if (state instanceof InteractiveClientState intState) {
                     String input = Cli.getInput();
                     if (input == null) {
-                        Thread.sleep(100);  // Wait a bit for some input
+                        Thread.sleep(INPUT_DELAY);  // Wait a bit for some input
                         continue;
                         // This prevents lack of input from blocking state updates
                     }

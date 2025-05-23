@@ -1,47 +1,20 @@
 package client.state;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 
 import client.BaseClient;
 import client.Cli;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RecvUnit;
-import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 
-public class PeriodicBotState extends NonInteractiveState implements SynchronizableState {
-    private final Random rng;
-    private final List<String> messages;
-    private final int period;
+public abstract class BotState extends NonInteractiveState implements SynchronizableState {
     private int lastId;
 
-    public PeriodicBotState(BaseClient client, List<String> messages, int period) {
-        this(client, messages, period, -1);
-    }
-
-    public PeriodicBotState(BaseClient client, List<String> messages, int period, int lastId) {
+    public BotState(BaseClient client, int lastId) {
         super(client);
 
-        this.messages = messages;
-        this.rng = new Random();
-        this.period = period;
         this.lastId = lastId;
-    }
-
-    @Override
-    public Optional<ProtocolUnit> buildNextUnit() {
-        try {
-            Thread.sleep(period);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        int messageIndex = rng.nextInt(messages.size());
-        String message = messages.get(messageIndex);
-
-        return Optional.of(new SendUnit(message));
     }
 
     @Override

@@ -2,40 +2,34 @@ package client.bot;
 
 import java.util.Random;
 
-import client.Client;
-import client.state.BotLoginState;
 import client.state.ClientState;
-import client.state.PeriodicBotState;
+import client.state.FixedIntervalBotState;
 import client.storage.SessionStore;
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 
-public class PeriodicBot extends Client {
+public class FixedIntervalBot extends BaseBot {
     private static final int MAX_BOT = 255;
-    private static final String NAME_PREFIX = "pbot-";
+    private static final String NAME_PREFIX = "fibot-";
     private static final String DEFAULT_PASSWORD = "password";
     private static final int DEFAULT_PERIOD = 1000;
 
-    private final String password;
+    private final int period;
 
-    public PeriodicBot(ProtocolPort protocolPort, ProtocolParser parser, SessionStore session, String password) {
-        super(protocolPort, parser, session);
+    public FixedIntervalBot(ProtocolPort protocolPort, ProtocolParser parser, SessionStore session, String password, int period) {
+        super(protocolPort, parser, session, password);
 
-        this.password = password;
+        this.period = period;
     }
 
     @Override
-    protected ClientState getInitialState() {
-        int syncId = getState() instanceof PeriodicBotState
-                ? ((PeriodicBotState) getState()).getSyncId()
-                : -1;
-        ClientState targetState = new PeriodicBotState(this, BotMessages.MESSAGES, DEFAULT_PERIOD, syncId);
-        return new BotLoginState(this, password, targetState);
+    protected ClientState getTargetState(int syncId) {
+        return new FixedIntervalBotState(this, BotMessages.MESSAGES, period, syncId);
     }
 
     private static void printUsage() {
-        System.out.println("Usage: java client.bot.PeriodicBot <room>");
+        System.out.println("Usage: java client.bot.FixedIntervalBot <room>");
     }
 
     public static void main(String[] args) {
@@ -52,7 +46,7 @@ public class PeriodicBot extends Client {
                 .orElseThrow(() -> new RuntimeException("Failed to create protocol port"));
         ProtocolParser parser = new ProtocolParserImpl();
 
-        PeriodicBot bot = new PeriodicBot(protocolPort, parser, session, DEFAULT_PASSWORD);
+        FixedIntervalBot bot = new FixedIntervalBot(protocolPort, parser, session, DEFAULT_PASSWORD, DEFAULT_PERIOD);
         bot.run();
     }
 }
