@@ -6,7 +6,6 @@ import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.LoginUnit;
 import protocol.unit.ProtocolUnit;
-import protocol.unit.TokenLoginUnit;
 
 public class BotLoginState extends WaitConfirmState {
     private final String password;
@@ -23,9 +22,7 @@ public class BotLoginState extends WaitConfirmState {
     protected ProtocolUnit buildUnitToSend() {
         BaseClient client = getClient();
         SessionStore session = client.getSession();
-        return session.getToken() == null
-                ? new LoginUnit(session.getUsername(), password)
-                : new TokenLoginUnit(session.getToken());
+        return new LoginUnit(session.getUsername(), password);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package client;
 
 import client.state.ClientState;
+import client.state.DeadState;
 import client.state.InteractiveClientState;
 import client.state.NonInteractiveState;
 import client.state.RoomState;
@@ -44,8 +45,7 @@ public abstract class BaseClient {
         this.previousUnit = null;
         this.session = session;
 
-        this.state = getInitialState();
-        this.state.setClient(this);
+        this.state = new DeadState(this);
 
         this.done = false;
         this.stateUpdateLock = new ReentrantLock();
@@ -149,7 +149,7 @@ public abstract class BaseClient {
                             Thread.currentThread().interrupt();
                         }
                     }
-                    
+
                 } else {
                     try {
                         waitForStateUpdate();
@@ -164,6 +164,8 @@ public abstract class BaseClient {
     }
 
     private void handleReceiving() {
+        setState(getInitialState());
+
         try {
             while (!done) {
                 ProtocolUnit unit = port.receive();
@@ -199,6 +201,7 @@ public abstract class BaseClient {
             return;
 
         done = true;
+        setState(new DeadState(this));
         try {
             port.close();
         } catch (IOException e) {
@@ -214,7 +217,6 @@ public abstract class BaseClient {
 
             return socket;
         } catch (IOException e) {
-            Cli.printError("Failed to create socket: " + e.getMessage());
             return null;
         }
     }

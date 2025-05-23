@@ -46,7 +46,7 @@ public class PeriodicBot extends Client {
         session.setRoom(args[0]);
 
         ProtocolPort protocolPort = getProtocolPort()
-            .orElseThrow(() -> new RuntimeException("Failed to create protocol port"));
+                .orElseThrow(() -> new RuntimeException("Failed to create protocol port"));
         ProtocolParser parser = new ProtocolParserImpl();
 
         PeriodicBot bot = new PeriodicBot(protocolPort, parser, session, DEFAULT_PASSWORD);

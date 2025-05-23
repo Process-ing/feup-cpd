@@ -63,4 +63,9 @@ public class Guest extends Client {
     public void cleanup() {
         // No cleanup needed for guest
     }
+
+    @Override
+    public String toString() {
+        return "guest";
+    }
 }
