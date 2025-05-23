@@ -1,6 +1,7 @@
 package client.storage;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.Properties;
 
 import utils.ConfigUtils;
@@ -10,11 +11,11 @@ public final class SessionStore {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_ROOM = "room";
 
-    private final String filename;
+    private final Optional<String> filename;
     private final Properties properties;
 
     public SessionStore(String filename, Properties properties) {
-        this.filename = filename;
+        this.filename = Optional.ofNullable(filename);
         this.properties = properties;
     }
 
@@ -22,8 +23,13 @@ public final class SessionStore {
         this(filename, ConfigUtils.loadConfig(filename));
     }
 
+    public SessionStore() {
+        this(null, new Properties());
+    }
+
     public void save() throws IOException {
-        ConfigUtils.saveConfig(filename, properties);
+        if (filename.isPresent())
+            ConfigUtils.saveConfig(filename.get(), properties);
     }
 
     public boolean hasSession() {

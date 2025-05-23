@@ -69,4 +69,9 @@ public class User extends Client {
     public void cleanup() {
         // No cleanup needed for user
     }
+
+    @Override
+    public String toString() {
+        return name;
+    }
 }

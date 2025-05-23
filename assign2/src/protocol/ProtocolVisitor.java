@@ -1,36 +1,35 @@
 package protocol;
 
-import java.util.Optional;
 import protocol.unit.*;
 
-public interface ProtocolVisitor {
-    Optional<ProtocolUnit> visit(RegisterUnit unit);
+public interface ProtocolVisitor<T> {
+    T visit(RegisterUnit unit);
 
-    Optional<ProtocolUnit> visit(LoginUnit unit);
+    T visit(LoginUnit unit);
 
-    Optional<ProtocolUnit> visit(LogoutUnit unit);
+    T visit(LogoutUnit unit);
 
-    Optional<ProtocolUnit> visit(EnterUnit unit);
+    T visit(EnterUnit unit);
 
-    Optional<ProtocolUnit> visit(LeaveUnit unit);
+    T visit(LeaveUnit unit);
 
-    Optional<ProtocolUnit> visit(SendUnit unit);
+    T visit(SendUnit unit);
 
-    Optional<ProtocolUnit> visit(RecvUnit unit);
+    T visit(RecvUnit unit);
 
-    Optional<ProtocolUnit> visit(SyncUnit unit);
+    T visit(SyncUnit unit);
 
-    Optional<ProtocolUnit> visit(OkUnit unit);
+    T visit(OkUnit unit);
 
-    Optional<ProtocolUnit> visit(ErrUnit unit);
+    T visit(ErrUnit unit);
 
-    Optional<ProtocolUnit> visit(InvalidUnit unit);
+    T visit(InvalidUnit unit);
 
-    Optional<ProtocolUnit> visit(EofUnit unit);
-    
-    Optional<ProtocolUnit> visit(AuthTokenUnit unit);
+    T visit(EofUnit unit);
 
-    Optional<ProtocolUnit> visit(PingUnit unit);
+    T visit(TokenLoginUnit unit);
 
-    Optional<ProtocolUnit> visit(PongUnit unit);
+    T visit(PingUnit unit);
+
+    T visit(PongUnit unit);
 }

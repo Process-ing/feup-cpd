@@ -1,11 +1,11 @@
 package protocol.unit;
 
-import java.util.Optional;
-
+import protocol.ArgedProtocolVisitor;
 import protocol.ProtocolVisitor;
 
 public interface ProtocolUnit {
     String serialize();
-    
-    Optional<ProtocolUnit> accept(ProtocolVisitor visitor);
+
+    <T> T accept(ProtocolVisitor<T> visitor);
+    <R, A> R accept(ArgedProtocolVisitor<R, A> visitor, A arg);
 }

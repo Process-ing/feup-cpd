@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import protocol.unit.AuthTokenUnit;
+import protocol.unit.TokenLoginUnit;
 import protocol.unit.EnterUnit;
 import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
@@ -31,20 +31,19 @@ public class ProtocolParserImpl implements ProtocolParser {
 
     public ProtocolParserImpl() {
         this.handlerMap = Map.ofEntries(
-            Map.entry("login-token", this::buildAuthToken),
-            Map.entry("login", this::buildLogin),
-            Map.entry("register", this::buildRegister),
-            Map.entry("logout", this::buildLogout),
-            Map.entry("enter", this::buildEnter),
-            Map.entry("leave", this::buildLeave),
-            Map.entry("send", this::buildSend),
-            Map.entry("recv", this::buildRecv),
-            Map.entry("sync", this::buildSync),
-            Map.entry("ok", this::buildOk),
-            Map.entry("err", this::buildErr),
-            Map.entry("ping", this::buildPing),
-            Map.entry("pong", this::buildPong)
-        );
+                Map.entry("login-token", this::buildAuthToken),
+                Map.entry("login", this::buildLogin),
+                Map.entry("register", this::buildRegister),
+                Map.entry("logout", this::buildLogout),
+                Map.entry("enter", this::buildEnter),
+                Map.entry("leave", this::buildLeave),
+                Map.entry("send", this::buildSend),
+                Map.entry("recv", this::buildRecv),
+                Map.entry("sync", this::buildSync),
+                Map.entry("ok", this::buildOk),
+                Map.entry("err", this::buildErr),
+                Map.entry("ping", this::buildPing),
+                Map.entry("pong", this::buildPong));
     }
 
     @Override
@@ -171,7 +170,7 @@ public class ProtocolParserImpl implements ProtocolParser {
 
         String token = args.get(0);
 
-        return new AuthTokenUnit(token);
+        return new TokenLoginUnit(token);
     }
 
     private ProtocolUnit buildPing(List<String> args) {

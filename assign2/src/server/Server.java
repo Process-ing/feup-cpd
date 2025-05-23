@@ -21,6 +21,7 @@ import structs.AuthDb;
 import structs.MessageQueue;
 import structs.SyncAuthDb;
 import structs.SyncMessageQueue;
+import structs.security.PasswordHasher;
 import structs.security.TokenManager;
 import structs.storage.AuthFileStore;
 import utils.ConfigUtils;
@@ -75,8 +76,6 @@ public class Server {
     }
 
     public void run() {
-        // TODO(Process-ing): Convert to real code
-
         try {
             // TODO: Improve AI Room creation
             createAIRooms(5);
@@ -139,10 +138,12 @@ public class Server {
         }
 
         AuthDb authDb;
+        TokenManager tokens = new TokenManager();
+        PasswordHasher hasher = new PasswordHasher();
+
         try {
             AuthFileStore store = new AuthFileStore(Path.of(USERS_DB_PATH));
-            TokenManager tokens = new TokenManager();
-            authDb = new SyncAuthDb(store, tokens);
+            authDb = new SyncAuthDb(store, tokens, hasher);
 
         } catch (IOException e) {
             System.err.println("Failed to load user DB: " + e.getMessage());

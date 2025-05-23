@@ -88,4 +88,9 @@ public class RoomUser extends Client {
     public void cleanup() {
         room.disconnectUser(this);
     }
+
+    @Override
+    public String toString() {
+        return name + "@" + room.getName();
+    }
 }
