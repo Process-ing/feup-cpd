@@ -1,5 +1,6 @@
 package server;
 
+import exception.RoomCreationException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +15,7 @@ import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import server.client.Guest;
+import server.room.AiRoom;
 import server.room.Room;
 import structs.AuthDb;
 import structs.MessageQueue;
@@ -31,7 +33,7 @@ public class Server {
 
     private final ServerSocket serverSocket;
     private final AuthDb authDb;
-    private final Map<String, Room> roomMap;
+    private final Map<String, RoomEntry> roomMap;
     private final ProtocolParser parser;
 
     public Server(ServerSocket serverSocket, AuthDb authDb, ProtocolParser parser) {
@@ -50,14 +52,41 @@ public class Server {
     }
 
     public Optional<Room> getRoom(String roomName) {
-        return Optional.ofNullable(roomMap.get(roomName));
+        RoomEntry entry = roomMap.get(roomName);
+        if (entry == null) {
+            return Optional.empty();
+        }
+        return Optional.of(entry.room());
     }
 
     public boolean addRoom(Room room) {
-        return roomMap.putIfAbsent(room.getName(), room) == null;
+        return addRoom(room, false);
+    }
+
+    public boolean addRoom(Room room, boolean isAi) {
+        return roomMap.putIfAbsent(room.getName(), new RoomEntry(room, isAi)) == null;
+    }
+
+    public void createAIRooms(int count) {
+        for (var c = 1; c <= count; c++) {
+            Room room = new AiRoom("ai" + c);
+            if(!addRoom(room, true)) 
+                throw new RoomCreationException("Failed to assign room to server");
+        }
+    }
+
+    public boolean isRoomAi(String roomName) {
+        RoomEntry entry = roomMap.get(roomName);
+        return entry != null && entry.isAi();
     }
 
     public void run() {
+        try {
+            createAIRooms(5);
+        } catch (RoomCreationException e) {
+            System.err.println("Failed to create AI rooms: " + e.getMessage());
+        }
+
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
@@ -79,7 +108,7 @@ public class Server {
             e.printStackTrace();
         }
     }
-
+    
     public static void main(String[] args) {
         Properties config;
         try {

@@ -1,7 +1,8 @@
 package client.state.confirm;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
+import client.state.AuthenticatedState;
 import client.state.GuestState;
 import client.state.RoomState;
 import client.storage.SessionStore;
@@ -19,10 +20,11 @@ public class RoomConfirmer extends Confirmer<RoomState> {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
+        String room = getState().getRoomName();
 
-        Cli.printResponse("Logged out: " + username);
+        Cli.printResponse("Left room: " + room);
 
-        client.setState(new GuestState(client));
+        client.setState(new AuthenticatedState(client, username));
         session.clear();
 
         return null;

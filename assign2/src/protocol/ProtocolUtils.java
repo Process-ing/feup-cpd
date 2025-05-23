@@ -10,16 +10,36 @@ public class ProtocolUtils {
         string = string.strip();
         List<String> tokens = new ArrayList<>();
 
-        Pattern pattern = Pattern.compile("\"([^\"]*)\"|(\\S+)");
+        Pattern pattern = Pattern.compile("\"((?:[^\"\\\\]|\\\\.)*+)\"|([^\\s\"]+)");
         Matcher matcher = pattern.matcher(string);
         while (matcher.find()) {
-            tokens.add(matcher.group(matcher.group(1) != null ? 1 : 2));
+            if (matcher.group(1) != null) {
+                tokens.add(ProtocolUtils.unescape(matcher.group(1)));
+            } else if (matcher.group(2) != null) {
+                tokens.add(matcher.group(2));
+            }
         }
 
         return tokens;
     }
 
-    public static String escapeToken(String token) {
-        return "\"" + token.replace("\"", "\\\"") + "\"";
+    public static String escapeToken(String token) {      
+        return "\"" + ProtocolUtils.escape(token) + "\"";
+    }
+
+    public static String escape(String s) {
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+    }
+
+    public static String unescape(String s) {
+        return s.replace("\\t", "\t")
+                .replace("\\r", "\r")
+                .replace("\\n", "\n")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");   
     }
 }

@@ -10,4 +10,5 @@ public interface MessageTable {
     Optional<Message> get(int id);
     List<Message> getAll();
     List<Message> getFrom(int id);
+    List<Message> getLast(int count);
 }

@@ -1,12 +1,11 @@
 package client.state;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
 import client.state.confirm.AuthConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
-
 import protocol.ProtocolParser;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;

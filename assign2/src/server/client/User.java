@@ -53,7 +53,7 @@ public class User extends Client {
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNAUTHORIZED));
 
         thread.setClient(newUser.get());
-        return Optional.of(new OkUnit(null));
+        return Optional.of(new OkUnit(server.isRoomAi(unit.roomName()) ? "ai" : "room"));
     }
 
     @Override
