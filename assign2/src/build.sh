@@ -1,3 +1,3 @@
 #!/bin/sh
 
-javac -d build **/*.java
+find . -name "*.java" | xargs javac -d build

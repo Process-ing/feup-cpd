@@ -15,11 +15,12 @@ public class SyncAuthDb implements AuthDb {
     private final Map<String, CredentialRecord> creds;
     private final AuthFileStore store;
     private final TokenManager tokenManager;
+    private final PasswordHasher hasher;
 
     private final ReentrantReadWriteLock.ReadLock readLock;
     private final ReentrantReadWriteLock.WriteLock writeLock;
 
-    public SyncAuthDb(AuthFileStore store, TokenManager tokenManager) throws IOException {
+    public SyncAuthDb(AuthFileStore store, TokenManager tokenManager, PasswordHasher hasher) throws IOException {
         ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
         this.readLock = lock.readLock();
         this.writeLock = lock.writeLock();
@@ -27,6 +28,7 @@ public class SyncAuthDb implements AuthDb {
         this.store = store;
         this.creds = new HashMap<>(store.load());
         this.tokenManager = tokenManager;
+        this.hasher = hasher;
     }
 
     @Override
@@ -35,8 +37,8 @@ public class SyncAuthDb implements AuthDb {
 
         try {
             if (creds.containsKey(user)) return Optional.empty();
-            
-            CredentialRecord rec = PasswordHasher.hash(pass.toCharArray());
+
+            CredentialRecord rec = hasher.hash(pass.toCharArray());
             creds.put(user, rec);
 
             try {
@@ -61,7 +63,7 @@ public class SyncAuthDb implements AuthDb {
 
         try {
             CredentialRecord rec = creds.get(user);
-            if (rec == null || !PasswordHasher.verify(pass.toCharArray(), rec)) 
+            if (rec == null || !hasher.verify(pass.toCharArray(), rec))
                 return Optional.empty();
         } finally {
             readLock.unlock();
@@ -79,7 +81,7 @@ public class SyncAuthDb implements AuthDb {
         if (validated.isEmpty()) return Optional.empty();
 
         String newToken = tokenManager.issue(validated.get());
-        
+
         return Optional.of(new User(thread, validated.get(), newToken));
     }
 }

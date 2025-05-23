@@ -1,83 +1,82 @@
 package protocol;
 
-import java.util.Optional;
 import protocol.unit.*;
 
-public interface DefaultProtocolVisitor extends ProtocolVisitor {
-    Optional<ProtocolUnit> visitDefault(ProtocolUnit unit);
+public interface DefaultProtocolVisitor<T> extends ProtocolVisitor<T> {
+    T visitDefault(ProtocolUnit unit);
 
     @Override
-    default Optional<ProtocolUnit> visit(RegisterUnit unit) {
+    default T visit(RegisterUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(LoginUnit unit) {
+    default T visit(LoginUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(LogoutUnit unit) {
+    default T visit(LogoutUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(EnterUnit unit) {
+    default T visit(EnterUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(LeaveUnit unit) {
+    default T visit(LeaveUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(SendUnit unit) {
+    default T visit(SendUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(RecvUnit unit) {
+    default T visit(RecvUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(SyncUnit unit) {
+    default T visit(SyncUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(OkUnit unit) {
+    default T visit(OkUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(ErrUnit unit) {
+    default T visit(ErrUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(InvalidUnit unit) {
+    default T visit(InvalidUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(EofUnit unit) {
+    default T visit(EofUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(AuthTokenUnit unit) {
+    default T visit(TokenLoginUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(PingUnit unit) {
+    default T visit(PingUnit unit) {
         return visitDefault(unit);
     }
 
     @Override
-    default Optional<ProtocolUnit> visit(PongUnit unit) {
+    default T visit(PongUnit unit) {
         return visitDefault(unit);
     }
 }

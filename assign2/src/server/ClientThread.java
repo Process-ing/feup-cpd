@@ -43,6 +43,8 @@ public class ClientThread {
     }
 
     public void start() {
+        System.out.printf("[%s] New client connected\n", LocalDateTime.now());
+
         Thread.ofVirtual().start(this::handleSending);
         Thread.ofVirtual().start(this::handleReceiving);
     }
@@ -54,8 +56,8 @@ public class ClientThread {
                 if (pendingMessage.isPresent()) {
                     ProtocolUnit unit = new RecvUnit(pendingMessage.get());
 
-                    if (port.isConnected())
-                        port.send(unit);
+                    port.send(unit);
+                    logResponse(unit);
                 }
             }
         } catch (IOException e) {
@@ -69,19 +71,31 @@ public class ClientThread {
         try {
             while (!done) {
                 ProtocolUnit request = port.receive();
-                System.out.printf("[%s] %s\n", LocalDateTime.now(), request.serialize());
+                logRequest(request);
                 if (request instanceof EofUnit)
                     break;
 
                 Optional<ProtocolUnit> response = request.accept(client);
-                if (response.isPresent())
+                if (response.isPresent()) {
                     port.send(response.get());
+                    logResponse(response.orElse(null));
+                }
             }
         } catch (IOException e1) {
             e1.printStackTrace();
         } finally {
             cleanup();
         }
+    }
+
+    private void logRequest(ProtocolUnit request) {
+        LocalDateTime now = LocalDateTime.now();
+        System.out.printf("[%s - %s] < %s\n", now, client, request.serialize());
+    }
+
+    private void logResponse(ProtocolUnit response) {
+        LocalDateTime now = LocalDateTime.now();
+        System.out.printf("[%s - %s] > %s\n", now, client, response.serialize());
     }
 
     private void cleanup() {

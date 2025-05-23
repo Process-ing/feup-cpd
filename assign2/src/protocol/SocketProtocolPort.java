@@ -1,5 +1,6 @@
 package protocol;
 
+import exception.EndpointUnreachableException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -10,8 +11,6 @@ import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
-
-import exception.EndpointUnreachableException;
 import protocol.unit.EofUnit;
 import protocol.unit.PingUnit;
 import protocol.unit.PongUnit;
@@ -60,10 +59,11 @@ public class SocketProtocolPort implements ProtocolPort {
 
         thisLock.readLock().lock();
         try {
-            if (this.writer.isEmpty()) {
-                throw new IllegalStateException("Socket is not initialized");
-            }
+            if (this.writer.isEmpty())  // If connection closed, just act as message lost
+                return;
+
             writer = this.writer.get();
+
         } finally {
             thisLock.readLock().unlock();
         }
@@ -87,9 +87,9 @@ public class SocketProtocolPort implements ProtocolPort {
 
         thisLock.readLock().lock();
         try {
-            if (this.reader.isEmpty()) {
-                throw new IllegalStateException("Socket is not initialized");
-            }
+            if (this.reader.isEmpty())
+                return new EofUnit();
+                
             reader = this.reader.get();
         } finally {
             thisLock.readLock().unlock();
@@ -154,7 +154,7 @@ public class SocketProtocolPort implements ProtocolPort {
                 if (socket.isPresent())
                     break;
 
-                System.err.println("Connection to server failed, retrying...");
+                System.out.println("Connection to server failed, retrying...");
                 backoff *= 2;
 
                 try {

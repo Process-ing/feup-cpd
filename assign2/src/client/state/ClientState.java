@@ -1,22 +1,22 @@
 package client.state;
 
-import client.Client;
+import client.BaseClient;
 import java.util.Optional;
 import protocol.DefaultProtocolVisitor;
 import protocol.unit.ProtocolUnit;
 
-public abstract class ClientState implements DefaultProtocolVisitor {
-    private Client client;
+public abstract class ClientState implements DefaultProtocolVisitor<Optional<ProtocolUnit>> {
+    private BaseClient client;
 
-    public ClientState(Client client) {
+    public ClientState(BaseClient client) {
         this.client = client;
     }
 
-    public Client getClient() {
+    public BaseClient getClient() {
         return client;
     }
 
-    public void setClient(Client client) {
+    public void setClient(BaseClient client) {
         this.client = client;
     }
 

@@ -1,7 +1,6 @@
 package protocol.unit;
 
-import java.util.Optional;
-
+import protocol.ArgedProtocolVisitor;
 import protocol.ProtocolUtils;
 import protocol.ProtocolVisitor;
 
@@ -12,7 +11,12 @@ public record EnterUnit(String roomName) implements ProtocolUnit {
     }
 
     @Override
-    public Optional<ProtocolUnit> accept(ProtocolVisitor visitor) {
+    public <T> T accept(ProtocolVisitor<T> visitor) {
         return visitor.visit(this);
+    }
+
+    @Override
+    public <R, A> R accept(ArgedProtocolVisitor<R, A> visitor, A arg) {
+        return visitor.visit(this, arg);
     }
 }
