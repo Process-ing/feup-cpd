@@ -1,5 +1,6 @@
 package client.state.confirm;
 
+import client.BaseClient;
 import client.Cli;
 import client.state.AuthenticatedState;
 import client.state.GuestState;
@@ -8,7 +9,6 @@ import client.storage.SessionStore;
 import protocol.unit.EnterUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
-import client.BaseClient;
 
 public class AuthConfirmer extends Confirmer<AuthenticatedState> {
     public AuthConfirmer(AuthenticatedState state) {
@@ -21,7 +21,12 @@ public class AuthConfirmer extends Confirmer<AuthenticatedState> {
         SessionStore session = client.getSession();
         String username = getState().getUsername();
 
-        Cli.printResponse("Entered room: " + unit.roomName());
+        if (arg.data().equals("ai")) {
+            Cli.printResponse("Entered AI room: " + unit.roomName());
+            Cli.printMessage("Bot", "Hi, " + username + "! Welcome to the AI room " + unit.roomName() + "! Asks questions and AI will answer.", false);
+        } else {
+            Cli.printResponse("Entered room: " + unit.roomName());
+        }
 
         client.setState(new RoomState(client, username, unit.roomName()));
         session.setRoom(unit.roomName());

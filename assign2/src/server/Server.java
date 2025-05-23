@@ -52,7 +52,11 @@ public class Server {
     }
 
     public Optional<Room> getRoom(String roomName) {
-        return Optional.ofNullable(roomMap.get(roomName).room());
+        RoomEntry entry = roomMap.get(roomName);
+        if (entry == null) {
+            return Optional.empty();
+        }
+        return Optional.of(entry.room());
     }
 
     public boolean addRoom(Room room) {
@@ -72,12 +76,12 @@ public class Server {
     }
 
     public boolean isRoomAi(String roomName) {
-        return roomMap.containsKey(roomName) && roomMap.get(roomName).isAi();
+        RoomEntry entry = roomMap.get(roomName);
+        return entry != null && entry.isAi();
     }
 
     public void run() {
         try {
-            // TODO: Improve AI Room creation
             createAIRooms(5);
         } catch (RoomCreationException e) {
             System.err.println("Failed to create AI rooms: " + e.getMessage());
