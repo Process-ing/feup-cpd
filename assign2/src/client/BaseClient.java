@@ -71,6 +71,10 @@ public abstract class BaseClient {
         return parser;
     }
 
+    public ProtocolPort getPort() {
+        return port;
+    }
+
     public void setState(ClientState state) {
         this.state = state;
 

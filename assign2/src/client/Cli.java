@@ -37,6 +37,10 @@ public class Cli {
         System.out.printf("\r\033[2K\033[31m%s\033[0m\n", error);
     }
 
+    public static void printWarning(String error) {
+        System.out.printf("\r\033[2K\033[33m%s\033[0m\n", error);
+    }
+
     public static void printConnection(String info) {
         System.out.printf("\r\033[2K\033[34m%s\033[0m\n", info);
     }

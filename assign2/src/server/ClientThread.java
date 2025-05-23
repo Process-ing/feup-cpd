@@ -43,6 +43,8 @@ public class ClientThread {
     }
 
     public void start() {
+        System.out.printf("[%s] New client connected\n", LocalDateTime.now());
+
         Thread.ofVirtual().start(this::handleSending);
         Thread.ofVirtual().start(this::handleReceiving);
     }
