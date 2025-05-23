@@ -8,8 +8,12 @@ import protocol.unit.EnterUnit;
 import protocol.unit.ProtocolUnit;
 
 public class ReenterState extends WaitConfirmState {
-    public ReenterState(BaseClient client) {
+    private ClientState oldState;
+
+    public ReenterState(BaseClient client, ClientState oldState) {
         super(client);
+
+        this.oldState = oldState;
     }
 
     @Override
@@ -23,7 +27,8 @@ public class ReenterState extends WaitConfirmState {
     protected ClientState getStateOnConfirm() {
         BaseClient client = getClient();
         SessionStore session =  client.getSession();
-        ClientState newState = new RoomState(client, session.getUsername(), session.getRoom());
+        int lastId = oldState instanceof SynchronizableState syncState ? syncState.getSyncId() : -1;
+        ClientState newState = new RoomState(client, session.getUsername(), session.getRoom(), lastId);
 
         Cli.printResponse("Entered room: " + session.getRoom());
         return newState;

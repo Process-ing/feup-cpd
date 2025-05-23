@@ -16,7 +16,7 @@ public class Client extends BaseClient {
     @Override
     protected ClientState getInitialState() {
         return getSession().getToken() != null
-            ? new ReloginState(this)
+            ? new ReloginState(this, getState())
             : new GuestState(this);
     }
 

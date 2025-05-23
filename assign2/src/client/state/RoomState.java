@@ -14,19 +14,23 @@ import protocol.unit.RecvUnit;
 import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 
-public class RoomState extends InteractiveClientState {
+public class RoomState extends InteractiveClientState implements SynchronizableState {
     private final RoomConfirmer confirmer;
     private final String username;
     private final String roomName;
     private int lastId;
 
     public RoomState(BaseClient client, String username, String roomName) {
+        this(client, username, roomName, -1);
+    }
+
+    public RoomState(BaseClient client, String username, String roomName, int lastId) {
         super(client);
 
         this.confirmer = new RoomConfirmer(this);
         this.username = username;
         this.roomName = roomName;
-        this.lastId = -1;
+        this.lastId = lastId;
     }
 
     public String getUsername() {
@@ -89,14 +93,24 @@ public class RoomState extends InteractiveClientState {
         }
 
         if (unit.id() > lastId + 1) { // Missing messages
-            return Optional.of(getSync());
+            return Optional.of(getSyncUnit());
         }
 
         // Messages already received, ignore
         return Optional.empty();
     }
 
-    public ProtocolUnit getSync() {
+    @Override
+    public int getSyncId() {
+        return lastId;
+    }
+
+    @Override
+    public void setSyncId(int syncId) {
+        this.lastId = syncId;
+    }
+
+    public SyncUnit getSyncUnit() {
         return new SyncUnit(lastId);
     }
 }

@@ -8,8 +8,12 @@ import protocol.unit.ProtocolUnit;
 import protocol.unit.TokenLoginUnit;
 
 public class ReloginState extends WaitConfirmState {
-    public ReloginState(BaseClient client) {
+    private ClientState oldState;
+
+    public ReloginState(BaseClient client, ClientState oldState) {
         super(client);
+
+        this.oldState = oldState;
     }
 
     @Override
@@ -25,7 +29,7 @@ public class ReloginState extends WaitConfirmState {
         SessionStore session =  client.getSession();
         ClientState newState = session.getRoom() == null
                 ? new AuthenticatedState(client, session.getUsername())
-                : new ReenterState(client);
+                : new ReenterState(client, oldState);
 
         Cli.printResponse("Login successful: " + session.getUsername());
         return newState;

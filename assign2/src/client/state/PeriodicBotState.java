@@ -18,12 +18,16 @@ public class PeriodicBotState extends NonInteractiveState implements Synchroniza
     private int lastId;
 
     public PeriodicBotState(BaseClient client, List<String> messages, int period) {
+        this(client, messages, period, -1);
+    }
+
+    public PeriodicBotState(BaseClient client, List<String> messages, int period, int lastId) {
         super(client);
 
         this.messages = messages;
         this.rng = new Random();
         this.period = period;
-        this.lastId = -1;
+        this.lastId = lastId;
     }
 
     @Override
@@ -56,6 +60,16 @@ public class PeriodicBotState extends NonInteractiveState implements Synchroniza
 
         // Messages already received, ignore
         return Optional.empty();
+    }
+
+    @Override
+    public int getSyncId() {
+        return lastId;
+    }
+
+    @Override
+    public void setSyncId(int syncId) {
+        this.lastId = syncId;
     }
 
     @Override

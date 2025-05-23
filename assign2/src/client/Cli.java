@@ -10,8 +10,10 @@ public class Cli {
 
     public static String getInput() {
         try {
-            String input = reader.readLine();
-            System.out.print("\033[F\r\033[2K");
+            String input = reader.ready() ? reader.readLine() : null;
+            if (input != null)
+                System.out.print("\033[F\r\033[2K");
+
             return input;
         } catch (IOException e) {
             printError("Error reading input: " + e.getMessage());

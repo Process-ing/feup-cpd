@@ -27,7 +27,10 @@ public class PeriodicBot extends Client {
 
     @Override
     protected ClientState getInitialState() {
-        ClientState targetState = new PeriodicBotState(this, BotMessages.MESSAGES, DEFAULT_PERIOD);
+        int syncId = getState() instanceof PeriodicBotState
+                ? ((PeriodicBotState) getState()).getSyncId()
+                : -1;
+        ClientState targetState = new PeriodicBotState(this, BotMessages.MESSAGES, DEFAULT_PERIOD, syncId);
         return new BotLoginState(this, password, targetState);
     }
 

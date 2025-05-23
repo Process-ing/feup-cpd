@@ -4,7 +4,7 @@ import client.state.ClientState;
 import client.state.DeadState;
 import client.state.InteractiveClientState;
 import client.state.NonInteractiveState;
-import client.state.RoomState;
+import client.state.SynchronizableState;
 import client.storage.SessionStore;
 import exception.EndpointUnreachableException;
 import java.io.IOException;
@@ -79,12 +79,20 @@ public abstract class BaseClient {
         } finally {
             stateUpdateLock.unlock();
         }
+
+        if (state instanceof SynchronizableState syncState) {
+            try {
+                port.send(syncState.getSyncUnit());
+            } catch (IOException e) {
+                Cli.printError("Failed to synchronize state");
+            }
+        }
     }
 
     public void waitForStateUpdate() throws InterruptedException {
         stateUpdateLock.lock();
         try {
-            stateUpdateCondition.signalAll();
+            stateUpdateCondition.await();
         } finally {
             stateUpdateLock.unlock();
         }
@@ -110,6 +118,11 @@ public abstract class BaseClient {
             while (!done) {
                 if (state instanceof InteractiveClientState intState) {
                     String input = Cli.getInput();
+                    if (input == null) {
+                        Thread.sleep(100);  // Wait a bit for some input
+                        continue;
+                        // This prevents lack of input from blocking state updates
+                    }
 
                     // State updates can be triggered while waiting for input
                     if (state != intState) {
@@ -158,6 +171,8 @@ public abstract class BaseClient {
                     }
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         } finally {
             cleanup();
         }
@@ -175,9 +190,6 @@ public abstract class BaseClient {
 
                     port.connect();
                     setState(getInitialState());
-
-                    if (state instanceof RoomState roomState && port.isConnected())
-                        port.send(roomState.getSync());
 
                     continue;
                 }
