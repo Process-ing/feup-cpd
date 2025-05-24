@@ -70,11 +70,11 @@ public class Server {
     public void createAIRooms() {
 
         List<String> names = List.of(
-            "Programming",    
-            "Psychology",
-            "Doodle",
-            "Ideas",
-            "Study"
+            "AI Programming",    
+            "AI Psychology",
+            "AI Doodle",
+            "AI Ideas",
+            "AI Study"
         );
 
         for (String name : names) {
