@@ -10,7 +10,7 @@ import protocol.ProtocolParser;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 
-public class AuthState extends InteractiveClientState {
+public class AuthState extends InteractiveState {
     private final String username;
     private final AuthConfirmer confirmer;
 

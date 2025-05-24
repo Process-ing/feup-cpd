@@ -1,8 +1,10 @@
 package client;
 
+import client.state.AuthState;
 import client.state.ClientState;
 import client.state.DeadState;
-import client.state.InteractiveClientState;
+import client.state.GuestState;
+import client.state.InteractiveState;
 import client.state.NonInteractiveState;
 import client.state.SynchronizableState;
 import client.storage.SessionStore;
@@ -21,6 +23,7 @@ import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import protocol.unit.EofUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.ProtocolUnit;
 import utils.ConfigUtils;
 import utils.SocketUtils;
@@ -37,18 +40,20 @@ public abstract class BaseClient {
     private final SessionStore session;
 
     private boolean done;
+    private boolean seenRooms;
     private final ReentrantLock stateUpdateLock;
     private final Condition stateUpdateCondition;
 
     public BaseClient(ProtocolPort port, ProtocolParser parser, SessionStore session) {
         this.port = port;
         this.parser = parser;
-        this.previousUnit = null;
+        this.previousUnit = new EofUnit();
         this.session = session;
 
         this.state = new DeadState(this);
 
         this.done = false;
+        this.seenRooms = false;
         this.stateUpdateLock = new ReentrantLock();
         this.stateUpdateCondition = stateUpdateLock.newCondition();
     }
@@ -85,13 +90,27 @@ public abstract class BaseClient {
             stateUpdateLock.unlock();
         }
 
-        if (state instanceof SynchronizableState syncState) {
+        if (state instanceof SynchronizableState syncState && syncState.getSyncId() != -1) {
             try {
                 port.send(syncState.getSyncUnit());
             } catch (IOException e) {
                 Cli.printError("Failed to synchronize state");
             }
         }
+
+        if (state instanceof AuthState && !seenRooms) {
+            seenRooms = true;
+            ProtocolUnit listRoomsUnit = new ListRoomsUnit();
+            try {
+                port.send(listRoomsUnit);
+                previousUnit = listRoomsUnit;
+            } catch (IOException e) {
+                Cli.printError("Failed to synchronize state");
+            }
+        }
+
+        if (state instanceof GuestState)
+            seenRooms = false;
     }
 
     public void waitForStateUpdate() throws InterruptedException {
@@ -121,17 +140,17 @@ public abstract class BaseClient {
     private void handleSending() {
         try {
             while (!done) {
-                if (state instanceof InteractiveClientState intState) {
+                if (state instanceof InteractiveState intState) {
                     String input = Cli.getInput();
                     if (input == null) {
-                        Thread.sleep(INPUT_DELAY);  // Wait a bit for some input
+                        Thread.sleep(INPUT_DELAY); // Wait a bit for some input
                         continue;
                         // This prevents lack of input from blocking state updates
                     }
 
                     // State updates can be triggered while waiting for input
                     if (state != intState) {
-                        if (state instanceof InteractiveClientState newState) {
+                        if (state instanceof InteractiveState newState) {
                             intState = newState;
                         } else {
                             continue;

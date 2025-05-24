@@ -71,7 +71,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(newUser.get());
-        return Optional.of(new OkUnit("success"));
+        return Optional.of(new OkUnit(null));
     }
 
     @Override
@@ -81,7 +81,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(new Guest(getThread()));
-        return Optional.of(new OkUnit("success"));
+        return Optional.of(new OkUnit(null));
     }
 
     @Override

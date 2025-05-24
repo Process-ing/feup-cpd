@@ -12,7 +12,7 @@ import protocol.unit.ErrUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 
-public class GuestState extends InteractiveClientState {
+public class GuestState extends InteractiveState {
     private final GuestConfirmer confirmer;
 
     public GuestState(BaseClient client) {

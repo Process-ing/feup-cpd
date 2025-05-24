@@ -8,6 +8,7 @@ import protocol.unit.LoginUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.RegisterUnit;
 import protocol.unit.TokenLoginUnit;
+
 import client.BaseClient;
 
 public class GuestConfirmer extends Confirmer<GuestState> {

@@ -7,13 +7,15 @@ import client.Cli;
 import client.BaseClient;
 import protocol.unit.ProtocolUnit;
 
-public abstract class InteractiveClientState extends ClientState {
-    public InteractiveClientState(BaseClient client) {
+public abstract class InteractiveState extends ClientState {
+    public InteractiveState(BaseClient client) {
         super(client);
     }
 
     public abstract Map<String, String> getAvailableCommands();
+
     public abstract String getInfo();
+
     public abstract ProtocolUnit buildResponse(String input);
 
     private String getCommand(String input) {

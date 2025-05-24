@@ -23,7 +23,7 @@ public class AuthConfirmer extends Confirmer<AuthState> {
         String[] rooms = arg.data().split(",");
         Arrays.sort(rooms);
 
-        Cli.printResponse("Room list: ");
+        Cli.printResponse("Available rooms: ");
         for (String room : rooms) {
             Cli.printResponse(" - " + room);
         }

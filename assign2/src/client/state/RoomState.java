@@ -14,7 +14,7 @@ import protocol.unit.RecvUnit;
 import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 
-public class RoomState extends InteractiveClientState implements SynchronizableState {
+public class RoomState extends InteractiveState implements SynchronizableState {
     private final RoomConfirmer confirmer;
     private final String username;
     private final String roomName;
@@ -44,12 +44,11 @@ public class RoomState extends InteractiveClientState implements SynchronizableS
     @Override
     public Map<String, String> getAvailableCommands() {
         return Map.of(
-            "/help", "/help : Show available commands",
-            "/info", "/info : Show information about session",
-            "/leave", "/leave : Leave the current room",
-            "/logout", "/logout : Logout from current account",
-            "", "<message> : Send a message to the room"
-        );
+                "/help", "/help : Show available commands",
+                "/info", "/info : Show information about session",
+                "/leave", "/leave : Leave the current room",
+                "/logout", "/logout : Logout from current account",
+                "", "<message> : Send a message to the room");
     }
 
     @Override

@@ -89,7 +89,7 @@ public class SocketProtocolPort implements ProtocolPort {
         try {
             if (this.reader.isEmpty())
                 return new EofUnit();
-                
+
             reader = this.reader.get();
         } finally {
             thisLock.readLock().unlock();
