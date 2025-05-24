@@ -45,7 +45,6 @@ public class GuestState extends InteractiveState {
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         BaseClient client = this.getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit previousUnit = client.getPreviousUnit();
 
         confirmer.visit(unit);
 

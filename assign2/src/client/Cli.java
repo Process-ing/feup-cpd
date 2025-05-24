@@ -16,6 +16,7 @@ public class Cli {
                 System.out.print("\033[F\r\033[2K");
 
             return input;
+
         } catch (IOException e) {
             printError("Error reading input: " + e.getMessage());
             return "";

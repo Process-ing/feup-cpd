@@ -36,7 +36,6 @@ public abstract class BaseClient {
     private final ProtocolPort port;
     private ClientState state;
     private final ProtocolParser parser;
-    private ProtocolUnit previousUnit;
     private final SessionStore session;
 
     private boolean done;
@@ -47,7 +46,6 @@ public abstract class BaseClient {
     public BaseClient(ProtocolPort port, ProtocolParser parser, SessionStore session) {
         this.port = port;
         this.parser = parser;
-        this.previousUnit = new EofUnit();
         this.session = session;
 
         this.state = new DeadState(this);
@@ -59,10 +57,6 @@ public abstract class BaseClient {
     }
 
     protected abstract ClientState getInitialState();
-
-    public ProtocolUnit getPreviousUnit() {
-        return previousUnit;
-    }
 
     public ClientState getState() {
         return state;
@@ -103,7 +97,6 @@ public abstract class BaseClient {
             ProtocolUnit listRoomsUnit = new ListRoomsUnit();
             try {
                 port.send(listRoomsUnit);
-                previousUnit = listRoomsUnit;
             } catch (IOException e) {
                 Cli.printError("Failed to synchronize state");
             }
@@ -123,6 +116,9 @@ public abstract class BaseClient {
     }
 
     public void run() {
+        // Ensure cleanup is executed on shutdown
+        Runtime.getRuntime().addShutdownHook(Thread.ofVirtual().unstarted(this::cleanup));
+
         Thread sending = Thread.ofVirtual().unstarted(this::handleSending);
         Thread receiving = Thread.ofVirtual().unstarted(this::handleReceiving);
 
@@ -167,8 +163,6 @@ public abstract class BaseClient {
                         Cli.printError("Failed to send message: " + e.getMessage());
                         continue;
                     }
-
-                    previousUnit = unit.get();
 
                 } else if (state instanceof NonInteractiveState nonInteractiveState) {
                     Optional<ProtocolUnit> unit = nonInteractiveState.buildNextUnit();
@@ -238,6 +232,14 @@ public abstract class BaseClient {
 
         done = true;
         setState(new DeadState(this));
+
+        session.setLocked(false);
+        try {
+            session.save();
+        } catch (IOException e) {
+            Cli.printError("Failed to save session: " + e.getMessage());
+        }
+
         try {
             port.close();
         } catch (IOException e) {
@@ -308,11 +310,27 @@ public abstract class BaseClient {
 
     protected static Optional<SessionStore> loadSession(String sessionSuffix) {
         String sessionPath = String.format(SESSION_PATH_FORMAT, sessionSuffix);
+        SessionStore sessionStore;
+
         try {
-            return Optional.of(new SessionStore(sessionPath));
+            sessionStore = new SessionStore(sessionPath);
         } catch (IOException e) {
             Cli.printError("Failed to load session: " + e.getMessage());
             return Optional.empty();
         }
+
+        if (sessionStore.isLocked()) {
+            Cli.printWarning("If you got this message right after launching the client, it means you are trying to use the same session in two clients. Try changing the session suffix in the command-line.");
+        }
+
+        sessionStore.setLocked(true);
+        try {
+            sessionStore.save();
+        } catch (IOException e) {
+            Cli.printError("Failed to save session: " + e.getMessage());
+            return Optional.empty();
+        }
+
+        return Optional.of(sessionStore);
     }
 }
