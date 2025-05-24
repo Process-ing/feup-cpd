@@ -1,5 +1,6 @@
 package server.room;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -145,6 +146,8 @@ public class AiRoom implements Room {
             String answer = m.group(1).strip();
             return ProtocolUtils.unescapeSpecials(answer);
 
+        } catch (ConnectException e) {
+            return "Sorry, service is unavailable. Please try again later.";
         } catch (Exception e) {
             e.printStackTrace();
             return null;
