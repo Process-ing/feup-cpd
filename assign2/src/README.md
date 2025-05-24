@@ -10,7 +10,7 @@ In order to run this project, please ensure the following requirements are met:
 
 ### Starting Ollama
 
-In order to run the project with the AI rooms, it is needed to run a local instance of Ollama. This can be done by running the following command while at the home folder:
+In order to run the project with the AI rooms, it is needed to run a local instance of Ollama. This can be done by running the following command while in the project home folder (where this file is located):
 
 ```bash
 docker compose up -d
@@ -64,7 +64,7 @@ Note: a suffix can optionally be passed to allow running multiple sessions on th
 
 Once the client has started, users can start interacting by sending **commands** with the following structure:
 
-```
+```bash
 /<command> <arg1> <arg2> ...
 ```
 
@@ -92,5 +92,5 @@ For a better client experience, we recommend executing the project in a terminal
 In addition to this, we recommend using the `rlwrap` tool to allow for command history, message restoration and overall better input experience, since no libraries could be used in this project. Once installed, it can be launched with the following command:
 
 ```bash
-rlwrap java client.Client
+rlwrap java client.Client <session-suffix>
 ```
