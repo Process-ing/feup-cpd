@@ -239,6 +239,12 @@ public abstract class BaseClient {
         } catch (IOException e) {
             Cli.printError("Failed to save session: " + e.getMessage());
         }
+
+        try {
+            port.close();
+        } catch (IOException e) {
+            Cli.printError("Failed to close port: " + e.getMessage());
+        }
     }
 
     private static Socket createSocket(InetAddress address, int port, String password, String truststorePath) {
