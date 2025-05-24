@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-
 import protocol.ProtocolParser;
 import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
@@ -68,11 +67,21 @@ public class Server {
         return roomMap.putIfAbsent(room.getName(), new RoomEntry(room, isAi)) == null;
     }
 
-    public void createAIRooms(int count) {
-        for (var c = 1; c <= count; c++) {
-            Room room = new AiRoom("ai" + c);
-            if(!addRoom(room, true))
-                throw new RoomCreationException("Failed to assign room to server");
+    public void createAIRooms() {
+
+        List<String> names = List.of(
+            "Programming",    
+            "Psychology",
+            "Doodle",
+            "Ideas",
+            "Study"
+        );
+
+        for (String name : names) {
+            Room room = new AiRoom(name.trim());
+            if (!addRoom(room, true)) {
+                throw new RoomCreationException("Failed to assign room '" + name + "' to server");
+            }
         }
     }
 
@@ -89,7 +98,7 @@ public class Server {
 
     public void run() {
         try {
-            createAIRooms(5);
+            createAIRooms();
         } catch (RoomCreationException e) {
             System.err.println("Failed to create AI rooms: " + e.getMessage());
         }

@@ -71,7 +71,9 @@ public class AiRoom implements Room {
 
         RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this, user.getToken());
         userMap.put(newUser.getName(), newUser);
-        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name)));
+
+        var content = String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name);
+        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", content));
 
         return Optional.of(newUser);
     }
@@ -158,7 +160,8 @@ public class AiRoom implements Room {
         List<Message> recent = messageTable.getLast(CONTEXT_WINDOW);
         StringBuilder prompt = new StringBuilder();
 
-        prompt.append(String.format("You are a chat bot in a room with different human users. Here are the last %d messages: ", recent.size()));
+        prompt.append(String.format("You are the dedicated AI companion for this room %s.", this.name));
+        prompt.append(String.format("Here are the last %d messages: ", recent.size()));
         for (Message message: recent) {
             prompt.append(String.format("%s:%s;", message.username(), message.content()));
         }
