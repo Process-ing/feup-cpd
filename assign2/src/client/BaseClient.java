@@ -226,7 +226,7 @@ public abstract class BaseClient {
         }
     }
 
-    private void cleanup() {
+    public void cleanup() {
         if (done)
             return;
 

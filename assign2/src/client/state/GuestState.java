@@ -1,7 +1,7 @@
 package client.state;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
 import client.state.confirm.GuestConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
@@ -27,7 +27,8 @@ public class GuestState extends InteractiveState {
                 "/help", "/help : Show available commands",
                 "/info", "/info : Show information about session",
                 "/register", "/register <username> <password> : Register new account",
-                "/login", "/login <username> <password> : Login with account");
+                "/login", "/login <username> <password> : Login with account",
+                "/exit", "/exit : Exit the client");
     }
 
     @Override

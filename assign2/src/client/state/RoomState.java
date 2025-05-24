@@ -1,12 +1,11 @@
 package client.state;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
 import client.state.confirm.RoomConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
-
 import protocol.ProtocolParser;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
@@ -48,7 +47,8 @@ public class RoomState extends InteractiveState implements SynchronizableState {
                 "/info", "/info : Show information about session",
                 "/leave", "/leave : Leave the current room",
                 "/logout", "/logout : Logout from current account",
-                "", "<message> : Send a message to the room");
+                "", "<message> : Send a message to the room",
+                "/exit", "/exit : Exit the client");
     }
 
     @Override
