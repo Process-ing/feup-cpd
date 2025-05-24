@@ -32,7 +32,8 @@ public class AuthState extends InteractiveState {
                 "/info", "/info : Show information about session",
                 "/list-rooms", "/list-rooms : List all available rooms",
                 "/enter", "/enter <room> : Enter/Create a room",
-                "/logout", "/logout : Logout from current account");
+                "/logout", "/logout : Logout from current account",
+                "/exit", "/exit : Exit the client");
     }
 
     @Override
@@ -50,7 +51,6 @@ public class AuthState extends InteractiveState {
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         BaseClient client = this.getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit previousUnit = client.getPreviousUnit();
 
         confirmer.visit(unit);
 

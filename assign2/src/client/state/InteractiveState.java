@@ -1,10 +1,9 @@
 package client.state;
 
+import client.BaseClient;
+import client.Cli;
 import java.util.Map;
 import java.util.Optional;
-
-import client.Cli;
-import client.BaseClient;
 import protocol.unit.ProtocolUnit;
 
 public abstract class InteractiveState extends ClientState {
@@ -33,6 +32,12 @@ public abstract class InteractiveState extends ClientState {
         Map<String, String> availableCommands = getAvailableCommands();
 
         String command = getCommand(input);
+
+        if (command.equals("/exit")) {
+            Cli.printConnection("Exiting client...");
+            getClient().cleanup();
+            return Optional.empty();
+        }
 
         if (!availableCommands.containsKey(command) || command.equals("/help")) {
             Cli.printHelp(availableCommands);

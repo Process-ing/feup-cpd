@@ -2,10 +2,8 @@ package structs;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 import server.ClientThread;
@@ -16,7 +14,6 @@ import structs.storage.AuthFileStore;
 
 public class SyncAuthDb implements AuthDb {
     private final Map<String, CredentialRecord> creds;
-    private final Set<String> loggedUsers;
     private final AuthFileStore store;
     private final TokenManager tokenManager;
     private final PasswordHasher hasher;
@@ -28,7 +25,6 @@ public class SyncAuthDb implements AuthDb {
 
         this.store = store;
         this.creds = new HashMap<>(store.load());
-        this.loggedUsers = new HashSet<>();
         this.tokenManager = tokenManager;
         this.hasher = hasher;
     }
@@ -51,8 +47,6 @@ public class SyncAuthDb implements AuthDb {
                 return Optional.empty();
             }
 
-            loggedUsers.add(pass);
-
             String token = tokenManager.issue(user);
             return Optional.of(new User(thread, user, token));
 
@@ -66,9 +60,6 @@ public class SyncAuthDb implements AuthDb {
         lock.lock();
 
         try {
-            if (!loggedUsers.add(user))
-                return Optional.empty();  // Prevent multiple logins with the same user
-
             CredentialRecord rec = creds.get(user);
             if (rec == null || !hasher.verify(pass.toCharArray(), rec))
                 return Optional.empty();
@@ -92,50 +83,8 @@ public class SyncAuthDb implements AuthDb {
             if (validated.isEmpty())
                 return Optional.empty();
 
-            if (!loggedUsers.add(validated.get()))
-                return Optional.empty();  // Prevent multiple logins with the same user
-
             String newToken = tokenManager.issue(validated.get());
             return Optional.of(new User(thread, validated.get(), newToken));
-
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public boolean userLoggedIn(String user) {
-        lock.lock();
-
-        try {
-            return loggedUsers.contains(user);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public boolean userLoggedInWith(String token) {
-        lock.lock();
-
-        try {
-            Optional<String> validated = tokenManager.validate(token);
-            if (validated.isEmpty())
-                return false;
-
-            return loggedUsers.contains(validated.get());
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    @Override
-    public boolean logout(String user) {
-        lock.lock();
-
-        try {
-            var res = loggedUsers.remove(user);
-            return res;
 
         } finally {
             lock.unlock();

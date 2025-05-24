@@ -12,7 +12,7 @@ import structs.SyncMessageTable;
 
 public class RoomImpl implements Room {
     private final String name;
-    private final Map<String, RoomUser> userMap;
+    private final Map<Integer, RoomUser> userMap;  // Client thread ID to RoomUser mapping
     private final MessageTable messageTable;
 
     public RoomImpl(String name) {
@@ -33,12 +33,8 @@ public class RoomImpl implements Room {
 
     @Override
     public Optional<RoomUser> connectUser(User user) {
-        RoomUser currentUser = userMap.get(user.getName());
-        if (currentUser != null)
-            return Optional.of(currentUser);
-
         RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this, user.getToken());
-        userMap.put(newUser.getName(), newUser);
+        userMap.put(newUser.getThread().getId(), newUser);
         return Optional.of(newUser);
 
         // Never returns empty because there is no authorization
@@ -46,7 +42,7 @@ public class RoomImpl implements Room {
 
     @Override
     public Optional<User> disconnectUser(RoomUser user) {
-        RoomUser removedUser = userMap.remove(user.getName());
+        RoomUser removedUser = userMap.remove(user.getThread().getId());
         if (removedUser == null)
             return Optional.empty();
 

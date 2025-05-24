@@ -1,7 +1,7 @@
 package client.state;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
 import client.state.confirm.GuestConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
@@ -27,7 +27,8 @@ public class GuestState extends InteractiveState {
                 "/help", "/help : Show available commands",
                 "/info", "/info : Show information about session",
                 "/register", "/register <username> <password> : Register new account",
-                "/login", "/login <username> <password> : Login with account");
+                "/login", "/login <username> <password> : Login with account",
+                "/exit", "/exit : Exit the client");
     }
 
     @Override
@@ -45,7 +46,6 @@ public class GuestState extends InteractiveState {
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         BaseClient client = this.getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit previousUnit = client.getPreviousUnit();
 
         confirmer.visit(unit);
 
@@ -64,8 +64,6 @@ public class GuestState extends InteractiveState {
             Cli.printError("Login failed. Please check your username and password.");
         } else if (unit.id() == ProtocolErrorIdentifier.REGISTER) {
             Cli.printError("Registration failed. Please try again.");
-        } else if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
-            Cli.printError("It seems you are already logged in in another window. Please log out first.");
         }
 
         return Optional.empty();

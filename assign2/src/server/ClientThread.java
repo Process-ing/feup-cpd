@@ -12,18 +12,24 @@ import structs.Message;
 import structs.MessageQueue;
 
 public class ClientThread {
+    private final int id;
     private final Server server;
     private final ProtocolPort port;
     private final MessageQueue queue;
     private Client client;
     private boolean done;
 
-    public ClientThread(Server server, ProtocolPort port, MessageQueue queue, Client client) {
+    public ClientThread(int id, Server server, ProtocolPort port, MessageQueue queue, Client client) {
+        this.id = id;
         this.server = server;
         this.port = port;
         this.queue = queue;
         this.client = client;
         this.done = false;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public Server getServer() {

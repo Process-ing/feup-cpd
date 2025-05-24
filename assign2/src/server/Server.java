@@ -103,6 +103,7 @@ public class Server {
             System.err.println("Failed to create AI rooms: " + e.getMessage());
         }
 
+        int id = 0;
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
@@ -112,7 +113,7 @@ public class Server {
                 port.connect();
 
                 MessageQueue queue = new SyncMessageQueue();
-                ClientThread clientThread = new ClientThread(this, port, queue, null);
+                ClientThread clientThread = new ClientThread(id++, this, port, queue, null);
 
                 //RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
                 Guest user = new Guest(clientThread);

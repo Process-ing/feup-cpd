@@ -40,18 +40,11 @@ public class BotLoginState extends WaitConfirmState {
 
     @Override
     protected boolean handleError(ErrUnit unit) {
-        if (unit.id() != ProtocolErrorIdentifier.LOGIN) {
-            BaseClient client = getClient();
-            client.setState(new BotRegisterState(client, password, targetState));
-            return true;
-        }
+        if (unit.id() != ProtocolErrorIdentifier.LOGIN)
+            return false;
 
-        if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
-            String message = String.format("Bot '%s' is already logged in in another window",
-                getClient().getSession().getUsername());
-            throw new IllegalStateException(message);
-        }
-
-        return false;
+        BaseClient client = getClient();
+        client.setState(new BotRegisterState(client, password, targetState));
+        return true;
     }
 }

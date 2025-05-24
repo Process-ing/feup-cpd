@@ -10,6 +10,7 @@ public final class SessionStore {
     private static final String KEY_TOKEN = "token";
     private static final String KEY_USERNAME = "username";
     private static final String KEY_ROOM = "room";
+    private static final String KEY_LOCK = "lock";
 
     private final Optional<String> filename;
     private final Properties properties;
@@ -48,6 +49,10 @@ public final class SessionStore {
         return properties.getProperty(KEY_USERNAME);
     }
 
+    public boolean isLocked() {
+        return Boolean.parseBoolean(properties.getProperty(KEY_LOCK, "false"));
+    }
+
     public void setToken(String token) {
         if (token != null)
             properties.setProperty(KEY_TOKEN, token);
@@ -64,6 +69,10 @@ public final class SessionStore {
         if (username != null)
             properties.setProperty(KEY_USERNAME, username);
         else properties.remove(KEY_USERNAME);
+    }
+
+    public void setLocked(boolean locked) {
+        properties.setProperty(KEY_LOCK, Boolean.toString(locked));
     }
 
     public void clear() {

@@ -23,9 +23,6 @@ public class Guest extends Client {
         ClientThread thread = getThread();
         AuthDb authDb = thread.getServer().getAuthDb();
 
-        if (authDb.userLoggedIn(unit.user()))
-            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.REPEATED_LOGIN));
-
         Optional<User> loggedUser = authDb.loginPass(unit.user(), unit.pass(), thread);
         if (loggedUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
@@ -67,9 +64,6 @@ public class Guest extends Client {
     public Optional<ProtocolUnit> visit(TokenLoginUnit unit) {
         ClientThread thread = getThread();
         AuthDb authDb = thread.getServer().getAuthDb();
-
-        if (authDb.userLoggedInWith(unit.token()))
-            return Optional.of(new ErrUnit(ProtocolErrorIdentifier.REPEATED_LOGIN));
 
         Optional<User> loggedUser = authDb.loginToken(unit.token(), thread);
         if (loggedUser.isEmpty())
