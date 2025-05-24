@@ -2,9 +2,9 @@
 
 ## Overview
 
-The following protocol specification details the structure used for this project for communication. This project involves room-based message exchange between multiple clients and a centralized server while ensuring causality. The connections between clients and server are established using Secure Sockets.
+The following protocol specification details the structure used for this project for communication. The project involves room-based message exchange between multiple clients and a centralized server while ensuring causality. The connections between clients and server are established using Secure Sockets.
 
-Based on this, we developed a simple protocol that defines how commands should be created, serialized, sent, received and parsed on both ends, triggering the correct actions. Below is an overviewof the different units of this protocol with arguments and meaning for each of them.
+Based on this, we developed a simple protocol that defines how commands should be created, serialized, sent, received and parsed on both ends, triggering the correct actions. Below is an overview of the different units of this protocol with arguments and meaning for each of them.
 
 ## Unit Format
 
