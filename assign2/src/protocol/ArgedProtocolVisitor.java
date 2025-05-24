@@ -6,6 +6,7 @@ import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.LeaveUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -22,6 +23,8 @@ public interface ArgedProtocolVisitor<R, A> {
     R visit(LoginUnit unit, A arg);
 
     R visit(LogoutUnit unit, A arg);
+
+    R visit(ListRoomsUnit unit, A arg);
 
     R visit(EnterUnit unit, A arg);
 

@@ -10,6 +10,7 @@ import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.LeaveUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -35,6 +36,7 @@ public class ProtocolParserImpl implements ProtocolParser {
                 Map.entry("login", this::buildLogin),
                 Map.entry("register", this::buildRegister),
                 Map.entry("logout", this::buildLogout),
+                Map.entry("list-rooms", this::buildListRooms),
                 Map.entry("enter", this::buildEnter),
                 Map.entry("leave", this::buildLeave),
                 Map.entry("send", this::buildSend),
@@ -92,6 +94,13 @@ public class ProtocolParserImpl implements ProtocolParser {
             return new InvalidUnit();
 
         return new LogoutUnit();
+    }
+
+    private ProtocolUnit buildListRooms(List<String> args) {
+        if (args.size() != 0)
+            return new InvalidUnit();
+
+        return new ListRoomsUnit();
     }
 
     private ProtocolUnit buildEnter(List<String> args) {

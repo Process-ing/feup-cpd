@@ -30,7 +30,6 @@ public class AiRoom implements Room {
     private final BlockingQueue<Runnable> taskQueue;
     private final RoomUser bot;
 
-
     public AiRoom(String name) {
         this.name = name;
         this.userMap = new HashMap<>();
@@ -71,8 +70,8 @@ public class AiRoom implements Room {
 
         RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this, user.getToken());
         userMap.put(newUser.getName(), newUser);
-        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name)));        
-        
+        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name)));
+
         return Optional.of(newUser);
     }
 
@@ -132,7 +131,7 @@ public class AiRoom implements Room {
 
             if (response.statusCode() != 200)
                 return null;
-            
+
             String body = response.body();
 
             // This was done using regex to make it less hardcoded
@@ -142,10 +141,10 @@ public class AiRoom implements Room {
 
             if (!m.find())
                 return null;
-            
+
             String answer = m.group(1).strip();
             return ProtocolUtils.unescape(answer);
-        
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -166,7 +165,7 @@ public class AiRoom implements Room {
 
     private void broadcastMessage(String content) {
         Message message = messageTable.add(bot, content);
-        
+
         for (RoomUser user : getOnlineUsers()) {
             MessageQueue userQueue = user.getThread().getMessageQueue();
             userQueue.push(message);

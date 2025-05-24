@@ -6,6 +6,7 @@ import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.LeaveUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -32,6 +33,11 @@ public interface DefaultArgedProtocolVisitor<R, A> extends ArgedProtocolVisitor<
 
     @Override
     default R visit(LogoutUnit unit, A arg) {
+        return visitDefault(unit, arg);
+    }
+
+    @Override
+    default R visit(ListRoomsUnit unit, A arg) {
         return visitDefault(unit, arg);
     }
 
