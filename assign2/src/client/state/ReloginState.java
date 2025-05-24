@@ -26,9 +26,9 @@ public class ReloginState extends WaitConfirmState {
     @Override
     protected ClientState getStateOnConfirm() {
         BaseClient client = getClient();
-        SessionStore session =  client.getSession();
+        SessionStore session = client.getSession();
         ClientState newState = session.getRoom() == null
-                ? new AuthenticatedState(client, session.getUsername())
+                ? new AuthState(client, session.getUsername())
                 : new ReenterState(client, oldState);
 
         Cli.printResponse("Login successful: " + session.getUsername());

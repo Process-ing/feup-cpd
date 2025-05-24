@@ -10,11 +10,11 @@ import protocol.ProtocolParser;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 
-public class AuthenticatedState extends InteractiveClientState {
+public class AuthState extends InteractiveClientState {
     private final String username;
     private final AuthConfirmer confirmer;
 
-    public AuthenticatedState(BaseClient client, String username) {
+    public AuthState(BaseClient client, String username) {
         super(client);
 
         this.username = username;
@@ -28,11 +28,11 @@ public class AuthenticatedState extends InteractiveClientState {
     @Override
     public Map<String, String> getAvailableCommands() {
         return Map.of(
-            "/help", "/help : Show available commands",
-            "/info", "/info : Show information about session",
-            "/enter", "/enter <room> : Enter a room",
-            "/logout", "/logout : Logout from current account"
-        );
+                "/help", "/help : Show available commands",
+                "/info", "/info : Show information about session",
+                "/list-rooms", "/list-rooms : List all available rooms",
+                "/enter", "/enter <room> : Enter/Create a room",
+                "/logout", "/logout : Logout from current account");
     }
 
     @Override

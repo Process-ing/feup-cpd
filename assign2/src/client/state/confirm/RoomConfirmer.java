@@ -2,7 +2,7 @@ package client.state.confirm;
 
 import client.BaseClient;
 import client.Cli;
-import client.state.AuthenticatedState;
+import client.state.AuthState;
 import client.state.GuestState;
 import client.state.RoomState;
 import client.storage.SessionStore;
@@ -24,7 +24,7 @@ public class RoomConfirmer extends Confirmer<RoomState> {
 
         Cli.printResponse("Left room: " + room);
 
-        client.setState(new AuthenticatedState(client, username));
+        client.setState(new AuthState(client, username));
         session.clear();
 
         return null;

@@ -70,7 +70,7 @@ public class Server {
     public void createAIRooms(int count) {
         for (var c = 1; c <= count; c++) {
             Room room = new AiRoom("ai" + c);
-            if(!addRoom(room, true)) 
+            if(!addRoom(room, true))
                 throw new RoomCreationException("Failed to assign room to server");
         }
     }
@@ -78,6 +78,12 @@ public class Server {
     public boolean isRoomAi(String roomName) {
         RoomEntry entry = roomMap.get(roomName);
         return entry != null && entry.isAi();
+    }
+
+    public List<Room> getRooms() {
+        return roomMap.values().stream()
+                .map(RoomEntry::room)
+                .toList();
     }
 
     public void run() {
@@ -108,7 +114,7 @@ public class Server {
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String[] args) {
         Properties config;
         try {

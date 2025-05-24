@@ -26,7 +26,7 @@ public class ReenterState extends WaitConfirmState {
     @Override
     protected ClientState getStateOnConfirm() {
         BaseClient client = getClient();
-        SessionStore session =  client.getSession();
+        SessionStore session = client.getSession();
         int lastId = oldState instanceof SynchronizableState syncState ? syncState.getSyncId() : -1;
         ClientState newState = new RoomState(client, session.getUsername(), session.getRoom(), lastId);
 
@@ -38,7 +38,7 @@ public class ReenterState extends WaitConfirmState {
     protected ClientState getStateOnError() {
         BaseClient client = getClient();
         SessionStore session = client.getSession();
-        return new AuthenticatedState(client, session.getUsername());
+        return new AuthState(client, session.getUsername());
     }
 
     @Override

@@ -1,18 +1,34 @@
 package client.state.confirm;
 
+import java.util.Arrays;
+
 import client.BaseClient;
 import client.Cli;
-import client.state.AuthenticatedState;
+import client.state.AuthState;
 import client.state.GuestState;
 import client.state.RoomState;
 import client.storage.SessionStore;
 import protocol.unit.EnterUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 
-public class AuthConfirmer extends Confirmer<AuthenticatedState> {
-    public AuthConfirmer(AuthenticatedState state) {
+public class AuthConfirmer extends Confirmer<AuthState> {
+    public AuthConfirmer(AuthState state) {
         super(state);
+    }
+
+    @Override
+    public Void visit(ListRoomsUnit unit, OkUnit arg) {
+        String[] rooms = arg.data().split(",");
+        Arrays.sort(rooms);
+
+        Cli.printResponse("Room list: ");
+        for (String room : rooms) {
+            Cli.printResponse(" - " + room);
+        }
+
+        return null;
     }
 
     @Override
@@ -23,7 +39,8 @@ public class AuthConfirmer extends Confirmer<AuthenticatedState> {
 
         if (arg.data().equals("ai")) {
             Cli.printResponse("Entered AI room: " + unit.roomName());
-            Cli.printMessage("Bot", "Hi, " + username + "! Welcome to the AI room " + unit.roomName() + "! Asks questions and AI will answer.", false);
+            Cli.printMessage("Bot", "Hi, " + username + "! Welcome to the AI room " + unit.roomName()
+                    + "! Asks questions and AI will answer.", false);
         } else {
             Cli.printResponse("Entered room: " + unit.roomName());
         }

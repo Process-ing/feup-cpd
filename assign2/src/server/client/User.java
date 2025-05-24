@@ -1,10 +1,14 @@
 package server.client;
 
 import exception.RoomCreationException;
+
+import java.util.List;
 import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
+import protocol.ProtocolUtils;
 import protocol.unit.EnterUnit;
 import protocol.unit.ErrUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
@@ -30,6 +34,20 @@ public class User extends Client {
 
     public String getToken() {
         return token;
+    }
+
+    @Override
+    public Optional<ProtocolUnit> visit(ListRoomsUnit unit) {
+        ClientThread thread = getThread();
+        Server server = thread.getServer();
+
+        List<Room> rooms = server.getRooms();
+        List<String> roomNames = rooms.stream()
+                .map(Room::getName)
+                .toList();
+        String data = ProtocolUtils.escapeToken(String.join(",", roomNames));
+
+        return Optional.of(new OkUnit(data));
     }
 
     @Override

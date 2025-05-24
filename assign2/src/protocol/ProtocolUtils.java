@@ -14,7 +14,7 @@ public class ProtocolUtils {
         Matcher matcher = pattern.matcher(string);
         while (matcher.find()) {
             if (matcher.group(1) != null) {
-                tokens.add(ProtocolUtils.unescape(matcher.group(1)));
+                tokens.add(ProtocolUtils.unescapeSpecials(matcher.group(1)));
             } else if (matcher.group(2) != null) {
                 tokens.add(matcher.group(2));
             }
@@ -23,11 +23,11 @@ public class ProtocolUtils {
         return tokens;
     }
 
-    public static String escapeToken(String token) {      
-        return "\"" + ProtocolUtils.escape(token) + "\"";
+    public static String escapeToken(String token) {
+        return "\"" + ProtocolUtils.escapeSpecials(token) + "\"";
     }
 
-    public static String escape(String s) {
+    public static String escapeSpecials(String s) {
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
@@ -35,11 +35,11 @@ public class ProtocolUtils {
                 .replace("\t", "\\t");
     }
 
-    public static String unescape(String s) {
+    public static String unescapeSpecials(String s) {
         return s.replace("\\t", "\t")
                 .replace("\\r", "\r")
                 .replace("\\n", "\n")
                 .replace("\\\"", "\"")
-                .replace("\\\\", "\\");   
+                .replace("\\\\", "\\");
     }
 }

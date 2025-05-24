@@ -1,7 +1,7 @@
 package client.state.confirm;
 
 import client.Cli;
-import client.state.AuthenticatedState;
+import client.state.AuthState;
 import client.state.GuestState;
 import client.storage.SessionStore;
 import protocol.unit.LoginUnit;
@@ -21,7 +21,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
 
         Cli.printResponse("Login successful: " + unit.user());
 
-        client.setState(new AuthenticatedState(client, unit.user()));
+        client.setState(new AuthState(client, unit.user()));
 
         String token = confirmation.data();
         session.clear();
@@ -37,8 +37,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
 
         Cli.printResponse("Registration successful: " + unit.user());
 
-        client.setState(new AuthenticatedState(client, unit.user()));
-
+        client.setState(new AuthState(client, unit.user()));
 
         String token = confirmation.data();
         session.setToken(token);
@@ -53,7 +52,7 @@ public class GuestConfirmer extends Confirmer<GuestState> {
 
         Cli.printResponse("Login successful: " + session.getUsername());
 
-        client.setState(new AuthenticatedState(client, session.getUsername()));
+        client.setState(new AuthState(client, session.getUsername()));
 
         String token = confirmation.data();
         session.setToken(token);

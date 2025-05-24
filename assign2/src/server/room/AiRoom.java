@@ -143,7 +143,7 @@ public class AiRoom implements Room {
                 return null;
 
             String answer = m.group(1).strip();
-            return ProtocolUtils.unescape(answer);
+            return ProtocolUtils.unescapeSpecials(answer);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -160,7 +160,7 @@ public class AiRoom implements Room {
             prompt.append(String.format("%s:%s;", message.username(), message.content()));
         }
 
-        return ProtocolUtils.escape(prompt.toString());
+        return ProtocolUtils.escapeSpecials(prompt.toString());
     }
 
     private void broadcastMessage(String content) {
