@@ -64,8 +64,6 @@ public class GuestState extends InteractiveState {
             Cli.printError("Login failed. Please check your username and password.");
         } else if (unit.id() == ProtocolErrorIdentifier.REGISTER) {
             Cli.printError("Registration failed. Please try again.");
-        } else if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
-            Cli.printError("It seems you are already logged in in another window. Please log out first.");
         }
 
         return Optional.empty();

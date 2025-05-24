@@ -49,14 +49,6 @@ public class ReloginState extends WaitConfirmState {
             return true;
         }
 
-        if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
-            Cli.printWarning("*NOTE*: If you got this message right after launching the client, it means you are using the same session in two clients. Try changing the session suffix in the command-line.");
-
-            BaseClient client = getClient();
-            client.setState(new GuestState(client));
-            return true;
-        }
-
         return false;
     }
 }

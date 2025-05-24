@@ -46,12 +46,6 @@ public class BotLoginState extends WaitConfirmState {
             return true;
         }
 
-        if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
-            String message = String.format("Bot '%s' is already logged in in another window",
-                getClient().getSession().getUsername());
-            throw new IllegalStateException(message);
-        }
-
         return false;
     }
 }

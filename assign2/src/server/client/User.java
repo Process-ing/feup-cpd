@@ -18,7 +18,6 @@ import server.Server;
 import server.room.AiRoom;
 import server.room.Room;
 import server.room.RoomImpl;
-import structs.AuthDb;
 
 public class User extends Client {
     private final String name;
@@ -99,16 +98,12 @@ public class User extends Client {
 
         thread.setClient(new Guest(thread));
 
-        AuthDb authDb = getThread().getServer().getAuthDb();
-        authDb.logout(name);
-
         return Optional.of(new OkUnit(ProtocolOkIdentifier.LOGOUT));
     }
 
     @Override
     public void cleanup() {
-        AuthDb authDb = getThread().getServer().getAuthDb();
-        authDb.logout(name);
+        // No specific cleanup needed for User
     }
 
     @Override
