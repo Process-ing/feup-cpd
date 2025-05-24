@@ -74,4 +74,11 @@ public final class TokenManager {
             }
         } finally { lock.writeLock().unlock(); }
     }
+
+    public String getUserToken(String username) {
+        lock.readLock().lock();
+        try {
+            return tokenUserMap.get(username);
+        } finally { lock.readLock().unlock(); }
+    }
 }

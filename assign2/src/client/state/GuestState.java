@@ -60,9 +60,14 @@ public class GuestState extends InteractiveState {
 
     @Override
     public Optional<ProtocolUnit> visit(ErrUnit unit) {
-        // TODO: isto se calhar vai ser alterado pelo CLI
-        if (!unit.id().equals(ProtocolErrorIdentifier.LOGIN))
-            Cli.printError("Authentication error: " + unit.id());
+        if (unit.id() == ProtocolErrorIdentifier.LOGIN) {
+            Cli.printError("Login failed. Please check your username and password.");
+        } else if (unit.id() == ProtocolErrorIdentifier.REGISTER) {
+            Cli.printError("Registration failed. Please try again.");
+        } else if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
+            Cli.printError("It seems you are already logged in in another window. Please log out first.");
+        }
+
         return Optional.empty();
     }
 }

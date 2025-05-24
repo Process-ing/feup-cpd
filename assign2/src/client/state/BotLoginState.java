@@ -4,6 +4,7 @@ import client.BaseClient;
 import client.Cli;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
+import protocol.unit.ErrUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.ProtocolUnit;
 
@@ -38,12 +39,19 @@ public class BotLoginState extends WaitConfirmState {
     }
 
     @Override
-    protected ClientState getStateOnError() {
-        return new BotRegisterState(getClient(), password, targetState);
-    }
+    protected boolean handleError(ErrUnit unit) {
+        if (unit.id() != ProtocolErrorIdentifier.LOGIN) {
+            BaseClient client = getClient();
+            client.setState(new BotRegisterState(client, password, targetState));
+            return true;
+        }
 
-    @Override
-    protected ProtocolErrorIdentifier getErrorIdentifier() {
-        return ProtocolErrorIdentifier.LOGIN;
+        if (unit.id() == ProtocolErrorIdentifier.REPEATED_LOGIN) {
+            String message = String.format("Bot '%s' is already logged in in another window",
+                getClient().getSession().getUsername());
+            throw new IllegalStateException(message);
+        }
+
+        return false;
     }
 }

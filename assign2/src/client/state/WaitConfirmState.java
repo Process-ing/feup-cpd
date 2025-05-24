@@ -3,7 +3,6 @@ package client.state;
 import java.util.Optional;
 
 import client.BaseClient;
-import protocol.ProtocolErrorIdentifier;
 import protocol.unit.ErrUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
@@ -19,8 +18,7 @@ public abstract class WaitConfirmState extends NonInteractiveState {
 
     protected abstract ProtocolUnit buildUnitToSend();
     protected abstract ClientState getStateOnConfirm();
-    protected abstract ClientState getStateOnError();
-    protected abstract ProtocolErrorIdentifier getErrorIdentifier();
+    protected abstract boolean handleError(ErrUnit unit);
 
     @Override
     public Optional<ProtocolUnit> buildNextUnit() {
@@ -41,13 +39,9 @@ public abstract class WaitConfirmState extends NonInteractiveState {
 
     @Override
     public Optional<ProtocolUnit> visit(ErrUnit unit) {
-        if (unit.id() != getErrorIdentifier())
-            return visitDefault(unit);
-
-        BaseClient client = getClient();
-        client.setState(getStateOnError());
-
-        return Optional.empty();
+        return handleError(unit)
+            ? Optional.empty()
+            : visitDefault(unit);
     }
 
     @Override

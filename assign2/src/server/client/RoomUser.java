@@ -85,7 +85,7 @@ public class RoomUser extends Client {
         getThread().setClient(new Guest(getThread()));
 
         AuthDb authDb = getThread().getServer().getAuthDb();
-        authDb.logout(token);
+        authDb.logout(name);
 
         return Optional.of(new OkUnit(ProtocolOkIdentifier.LOGOUT));
     }
@@ -93,6 +93,9 @@ public class RoomUser extends Client {
     @Override
     public void cleanup() {
         room.disconnectUser(this);
+
+        AuthDb authDb = getThread().getServer().getAuthDb();
+        authDb.logout(name);
     }
 
     @Override

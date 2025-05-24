@@ -7,6 +7,7 @@ public enum ProtocolErrorIdentifier {
     UNEXPECTED,
     ASYNC,
     LOGIN,
+    REPEATED_LOGIN,
     REGISTER,
     UNAUTHORIZED,
     UNKNOWN;

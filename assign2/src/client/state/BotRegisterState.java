@@ -4,6 +4,7 @@ import client.BaseClient;
 import client.Cli;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
+import protocol.unit.ErrUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.RegisterUnit;
 
@@ -39,15 +40,12 @@ public class BotRegisterState extends WaitConfirmState {
     }
 
     @Override
-    protected ClientState getStateOnError() {
+    protected boolean handleError(ErrUnit unit) {
+        if (unit.id() != ProtocolErrorIdentifier.REGISTER)
+            return false;
+
         String message = String.format("Bot failed to login with username '%s' and password '%s'",
-                getClient().getSession().getUsername(), password);
+            getClient().getSession().getUsername(), password);
         throw new IllegalStateException(message);
     }
-
-    @Override
-    protected ProtocolErrorIdentifier getErrorIdentifier() {
-        return ProtocolErrorIdentifier.REGISTER;
-    }
-
 }

@@ -78,7 +78,7 @@ public class ClientThread {
                 Optional<ProtocolUnit> response = request.accept(client);
                 if (response.isPresent()) {
                     port.send(response.get());
-                    logResponse(response.orElse(null));
+                    logResponse(response.get());
                 }
             }
         } catch (IOException e1) {

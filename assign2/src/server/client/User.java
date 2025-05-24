@@ -100,14 +100,15 @@ public class User extends Client {
         thread.setClient(new Guest(thread));
 
         AuthDb authDb = getThread().getServer().getAuthDb();
-        authDb.logout(token);
+        authDb.logout(name);
 
-        return Optional.of(new OkUnit(null));
+        return Optional.of(new OkUnit(ProtocolOkIdentifier.LOGOUT));
     }
 
     @Override
     public void cleanup() {
-        // No cleanup needed for user
+        AuthDb authDb = getThread().getServer().getAuthDb();
+        authDb.logout(name);
     }
 
     @Override
