@@ -2,6 +2,9 @@
 
 CPD Projects of group T13G12.
 
+- **[Project 1](./assign1/src)**
+- **[Project 2](./assign2/src)**
+
 Group members:
 
 1. Bruno Oliveira (up202208700@up.pt)
