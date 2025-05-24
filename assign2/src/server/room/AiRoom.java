@@ -159,6 +159,7 @@ public class AiRoom implements Room {
         for (Message message: recent) {
             prompt.append(String.format("%s:%s;", message.username(), message.content()));
         }
+        prompt.append("Now, respond to the last message as if you were a human user in this room. Use a friendly and helpful tone.");
 
         return ProtocolUtils.escapeSpecials(prompt.toString());
     }

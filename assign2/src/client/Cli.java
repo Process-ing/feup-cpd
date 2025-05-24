@@ -59,11 +59,9 @@ public class Cli {
     }
 
     public static void printRooms(List<String> rooms, List<String> aiRooms){
-        if (!rooms.isEmpty()) {
-            System.out.println("\r\033[2K\033[36mAvailable Rooms\033[0m");
-            for (String room: rooms) {
-                System.out.printf(" ◇ %s\n", room);
-            }
+        System.out.println("\r\033[2K\033[36mAvailable Rooms\033[0m");
+        for (String room: rooms) {
+            System.out.printf(" ◇ %s\n", room);
         }
         for (String aiRoom: aiRooms) {
             System.out.printf(" ◈ %s \033[35m(AI)\033[0m\n", aiRoom);

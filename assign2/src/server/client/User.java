@@ -5,6 +5,7 @@ import exception.RoomCreationException;
 import java.util.List;
 import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
+import protocol.ProtocolOkIdentifier;
 import protocol.ProtocolUtils;
 import protocol.unit.EnterUnit;
 import protocol.unit.ErrUnit;
@@ -14,6 +15,7 @@ import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 import server.ClientThread;
 import server.Server;
+import server.room.AiRoom;
 import server.room.Room;
 import server.room.RoomImpl;
 
@@ -55,7 +57,7 @@ public class User extends Client {
 
         String data = ProtocolUtils.escapeToken(String.join("\n", roomNames) + "\n\n" + String.join("\n", aiRoomNames));
 
-        return Optional.of(new OkUnit(data));
+        return Optional.of(new OkUnit(ProtocolOkIdentifier.LIST_ROOMS, data));
     }
 
     @Override
@@ -65,13 +67,16 @@ public class User extends Client {
 
         Optional<Room> optRoom = server.getRoom(unit.roomName());
         Room room;
+        ProtocolOkIdentifier responseId;
 
         if (optRoom.isPresent()) {
             room = optRoom.get();
+            responseId = ProtocolOkIdentifier.ENTER_ROOM;
         } else {
             room = new RoomImpl(unit.roomName());
             if (!server.addRoom(room))
                 throw new RoomCreationException("Failed to assign room to server");
+            responseId = ProtocolOkIdentifier.CREATE_ROOM;
         }
 
         Optional<RoomUser> newUser = room.connectUser(this);
@@ -79,7 +84,12 @@ public class User extends Client {
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.UNAUTHORIZED));
 
         thread.setClient(newUser.get());
-        return Optional.of(new OkUnit(server.isRoomAi(unit.roomName()) ? "ai" : "room"));
+
+        String roomName = room.getName();
+        boolean aiRoom = room instanceof AiRoom;
+        String info = ProtocolUtils.escapeToken(roomName + "\n" + (aiRoom ? "ai" : "normal"));
+
+        return Optional.of(new OkUnit(responseId, info));
     }
 
     @Override

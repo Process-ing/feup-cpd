@@ -154,12 +154,16 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildOk(List<String> args) {
-        if (args.size() != 1)
+        if (args.size() < 1 || args.size() > 2)
             return new InvalidUnit();
 
-        String data = args.get(0);
+        Optional<ProtocolOkIdentifier> id = ProtocolOkIdentifier.fromString(args.get(0));
+        if (id.isEmpty())
+            return new InvalidUnit();
 
-        return new OkUnit(data);
+        String data = args.size() == 2 ? args.get(1) : "";
+
+        return new OkUnit(id.get(), data);
     }
 
     private ProtocolUnit buildErr(List<String> args) {

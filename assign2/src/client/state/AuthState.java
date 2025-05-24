@@ -52,7 +52,7 @@ public class AuthState extends InteractiveState {
         SessionStore session = client.getSession();
         ProtocolUnit previousUnit = client.getPreviousUnit();
 
-        previousUnit.accept(confirmer, unit);
+        confirmer.visit(unit);
 
         try {
             session.save();

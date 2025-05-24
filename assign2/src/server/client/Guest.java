@@ -2,6 +2,8 @@ package server.client;
 
 import java.util.Optional;
 import protocol.ProtocolErrorIdentifier;
+import protocol.ProtocolOkIdentifier;
+import protocol.ProtocolUtils;
 import protocol.unit.TokenLoginUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.LoginUnit;
@@ -25,9 +27,16 @@ public class Guest extends Client {
         if (loggedUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
 
+        String token = loggedUser.get().getToken();
+        String username = loggedUser.get().getName();
+
         thread.setClient(loggedUser.get());
 
-        return Optional.of(new OkUnit(loggedUser.get().getToken()));
+        ProtocolUnit response = new OkUnit(
+            ProtocolOkIdentifier.LOGIN,
+            ProtocolUtils.escapeToken(token + "\n" + username)
+        );
+        return Optional.of(response);
     }
 
     @Override
@@ -39,9 +48,16 @@ public class Guest extends Client {
         if (newUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.REGISTER));
 
+        String token = newUser.get().getToken();
+        String username = newUser.get().getName();
+
         thread.setClient(newUser.get());
 
-        return Optional.of(new OkUnit(newUser.get().getToken()));
+        ProtocolUnit response = new OkUnit(
+            ProtocolOkIdentifier.REGISTER,
+            ProtocolUtils.escapeToken(token + "\n" + username)
+        );
+        return Optional.of(response);
     }
 
     @Override
@@ -54,9 +70,16 @@ public class Guest extends Client {
         if (loggedUser.isEmpty())
             return Optional.of(new ErrUnit(ProtocolErrorIdentifier.LOGIN));
 
+        String token = loggedUser.get().getToken();
+        String username = loggedUser.get().getName();
+
         thread.setClient(loggedUser.get());
 
-        return Optional.of(new OkUnit(loggedUser.get().getToken()));
+        ProtocolUnit response = new OkUnit(
+            ProtocolOkIdentifier.LOGIN,
+            ProtocolUtils.escapeToken(token + "\n" + username)
+        );
+        return Optional.of(response);
     }
 
     @Override

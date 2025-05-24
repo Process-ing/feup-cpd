@@ -36,10 +36,27 @@ public class ProtocolUtils {
     }
 
     public static String unescapeSpecials(String s) {
-        return s.replace("\\t", "\t")
-                .replace("\\r", "\r")
-                .replace("\\n", "\n")
-                .replace("\\\"", "\"")
-                .replace("\\\\", "\\");
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                char next = s.charAt(i + 1);
+                switch (next) {
+                    case 'n': result.append('\n'); i++; break;
+                    case 'r': result.append('\r'); i++; break;
+                    case 't': result.append('\t'); i++; break;
+                    case '"': result.append('\"'); i++; break;
+                    case '\\': result.append('\\'); i++; break;
+                    default: result.append(c);
+                }
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    public static String toKebabCase(String string) {
+        return string.toLowerCase().replace('_', '-');
     }
 }

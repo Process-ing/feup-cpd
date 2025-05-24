@@ -6,8 +6,7 @@ import client.state.AuthState;
 import client.state.GuestState;
 import client.state.RoomState;
 import client.storage.SessionStore;
-import protocol.unit.LeaveUnit;
-import protocol.unit.LogoutUnit;
+import protocol.ProtocolOkIdentifier;
 import protocol.unit.OkUnit;
 
 public class RoomConfirmer extends Confirmer<RoomState> {
@@ -16,7 +15,12 @@ public class RoomConfirmer extends Confirmer<RoomState> {
     }
 
     @Override
-    public Void visit(LeaveUnit unit, OkUnit arg) {
+    protected void buildVisitor() {
+        addVisit(ProtocolOkIdentifier.LEAVE_ROOM, this::visitLeave);
+        addVisit(ProtocolOkIdentifier.LOGOUT, this::visitLogout);
+    }
+
+    public void visitLeave(OkUnit confirmation) {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
@@ -26,12 +30,9 @@ public class RoomConfirmer extends Confirmer<RoomState> {
 
         client.setState(new AuthState(client, username));
         session.clear();
-
-        return null;
     }
 
-    @Override
-    public Void visit(LogoutUnit unit, OkUnit arg) {
+    public void visitLogout(OkUnit confirmation) {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
@@ -40,7 +41,5 @@ public class RoomConfirmer extends Confirmer<RoomState> {
 
         client.setState(new GuestState(client));
         session.clear();
-
-        return null;
     }
 }

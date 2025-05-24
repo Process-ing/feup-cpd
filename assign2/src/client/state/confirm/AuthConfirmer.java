@@ -3,6 +3,7 @@ package client.state.confirm;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import client.BaseClient;
 import client.Cli;
@@ -10,10 +11,10 @@ import client.state.AuthState;
 import client.state.GuestState;
 import client.state.RoomState;
 import client.storage.SessionStore;
-import protocol.unit.EnterUnit;
-import protocol.unit.ListRoomsUnit;
-import protocol.unit.LogoutUnit;
+import protocol.ProtocolOkIdentifier;
 import protocol.unit.OkUnit;
+
+record RoomInfo(String roomName, boolean isAi) {}
 
 public class AuthConfirmer extends Confirmer<AuthState> {
     public AuthConfirmer(AuthState state) {
@@ -21,16 +22,26 @@ public class AuthConfirmer extends Confirmer<AuthState> {
     }
 
     @Override
-    public Void visit(ListRoomsUnit unit, OkUnit arg) {
-        String[] roomDivisions = arg.data().split("\\n\\n");
+    protected void buildVisitor() {
+        addVisit(ProtocolOkIdentifier.LIST_ROOMS, this::visitListRooms);
+        addVisit(ProtocolOkIdentifier.CREATE_ROOM, (OkUnit confirmation) -> this.visitEnter(confirmation, true));
+        addVisit(ProtocolOkIdentifier.ENTER_ROOM, (OkUnit confirmation) -> visitEnter(confirmation, false));
+        addVisit(ProtocolOkIdentifier.LOGOUT, this::visitLogout);
+    }
+
+    public void visitListRooms(OkUnit confirmation) {
+        Optional<String> data = confirmation.data();
+        if (data.isEmpty())
+            return;
+
+        String[] roomDivisions = data.get().split("\\n\\n");
         if (roomDivisions.length != 2)
-            return null;
+            return;
 
         List<String> normalRooms = toRoomNames(roomDivisions[0]);
         List<String> aiRooms = toRoomNames(roomDivisions[1]);
 
         Cli.printRooms(normalRooms, aiRooms);
-        return null;
     }
 
     private List<String> toRoomNames(String division) {
@@ -41,28 +52,44 @@ public class AuthConfirmer extends Confirmer<AuthState> {
         return roomNames;
     }
 
-    @Override
-    public Void visit(EnterUnit unit, OkUnit arg) {
+    public void visitEnter(OkUnit confirmation, boolean created) {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
 
-        if (arg.data().equals("ai")) {
-            Cli.printResponse("Entered AI room: " + unit.roomName());
-            Cli.printMessage("Bot", "Hi, " + username + "! Welcome to the AI room " + unit.roomName()
+        Optional<RoomInfo> roomInfo = parseRoomInfo(confirmation);
+        if (roomInfo.isEmpty())
+            return;
+
+        String roomName = roomInfo.get().roomName();
+        if (roomInfo.get().isAi()) {
+            Cli.printResponse((created ? "Created" : "Entered") + " AI room: " + roomName);
+            Cli.printMessage("Bot", "Hi, " + username + "! Welcome to the AI room " + roomName
                     + "! Asks questions and AI will answer.", false);
         } else {
-            Cli.printResponse("Entered room: " + unit.roomName());
+            Cli.printResponse((created ? "Created" : "Entered") + " room: " + roomName);
         }
 
-        client.setState(new RoomState(client, username, unit.roomName()));
-        session.setRoom(unit.roomName());
-
-        return null;
+        client.setState(new RoomState(client, username, roomName));
+        session.setRoom(roomName);
     }
 
-    @Override
-    public Void visit(LogoutUnit unit, OkUnit arg) {
+    private Optional<RoomInfo> parseRoomInfo(OkUnit confirmation) {
+        Optional<String> data = confirmation.data();
+        if (data.isEmpty())
+            return Optional.empty();
+
+        String[] parts = data.get().split("\n", 2);
+        if (parts.length < 2)
+            return Optional.empty();
+
+        String roomName = parts[0];
+        boolean isAi = parts[1].equals("ai");
+
+        return Optional.of(new RoomInfo(roomName, isAi));
+    }
+
+    public void visitLogout(OkUnit confirmation) {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
         String username = getState().getUsername();
@@ -71,7 +98,5 @@ public class AuthConfirmer extends Confirmer<AuthState> {
 
         client.setState(new GuestState(client));
         session.clear();
-
-        return null;
     }
 }
