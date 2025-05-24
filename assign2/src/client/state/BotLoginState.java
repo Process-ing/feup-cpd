@@ -40,12 +40,11 @@ public class BotLoginState extends WaitConfirmState {
 
     @Override
     protected boolean handleError(ErrUnit unit) {
-        if (unit.id() != ProtocolErrorIdentifier.LOGIN) {
-            BaseClient client = getClient();
-            client.setState(new BotRegisterState(client, password, targetState));
-            return true;
-        }
+        if (unit.id() != ProtocolErrorIdentifier.LOGIN)
+            return false;
 
-        return false;
+        BaseClient client = getClient();
+        client.setState(new BotRegisterState(client, password, targetState));
+        return true;
     }
 }
