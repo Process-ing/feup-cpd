@@ -18,7 +18,7 @@ public class SocketUtils {
     private static final String KEYSTORE_TYPE = "JKS";
     private static final String KEYMANAGER_FACTORY_ALG = "SunX509";
     private static final String SSL_CONTEXT_PROTOCOL = "TLS";
-    private static final int SO_TIMEOUT = 1000; // 1 second
+    private static final int SO_TIMEOUT = 3000; // 3 second
 
     public static SSLSocket newSSLSocket(InetAddress address, int port, String password, String truststorePath)
             throws IOException {
