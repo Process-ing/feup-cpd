@@ -1,8 +1,10 @@
 package client;
 
+import client.state.AuthState;
 import client.state.ClientState;
 import client.state.DeadState;
-import client.state.InteractiveClientState;
+import client.state.GuestState;
+import client.state.InteractiveState;
 import client.state.NonInteractiveState;
 import client.state.SynchronizableState;
 import client.storage.SessionStore;
@@ -21,6 +23,7 @@ import protocol.ProtocolParserImpl;
 import protocol.ProtocolPort;
 import protocol.SocketProtocolPort;
 import protocol.unit.EofUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.ProtocolUnit;
 import utils.ConfigUtils;
 import utils.SocketUtils;
@@ -33,31 +36,27 @@ public abstract class BaseClient {
     private final ProtocolPort port;
     private ClientState state;
     private final ProtocolParser parser;
-    private ProtocolUnit previousUnit;
     private final SessionStore session;
 
     private boolean done;
+    private boolean seenRooms;
     private final ReentrantLock stateUpdateLock;
     private final Condition stateUpdateCondition;
 
     public BaseClient(ProtocolPort port, ProtocolParser parser, SessionStore session) {
         this.port = port;
         this.parser = parser;
-        this.previousUnit = null;
         this.session = session;
 
         this.state = new DeadState(this);
 
         this.done = false;
+        this.seenRooms = false;
         this.stateUpdateLock = new ReentrantLock();
         this.stateUpdateCondition = stateUpdateLock.newCondition();
     }
 
     protected abstract ClientState getInitialState();
-
-    public ProtocolUnit getPreviousUnit() {
-        return previousUnit;
-    }
 
     public ClientState getState() {
         return state;
@@ -85,13 +84,26 @@ public abstract class BaseClient {
             stateUpdateLock.unlock();
         }
 
-        if (state instanceof SynchronizableState syncState) {
+        if (state instanceof SynchronizableState syncState && syncState.getSyncId() != -1) {
             try {
                 port.send(syncState.getSyncUnit());
             } catch (IOException e) {
                 Cli.printError("Failed to synchronize state");
             }
         }
+
+        if (state instanceof AuthState && !seenRooms) {
+            seenRooms = true;
+            ProtocolUnit listRoomsUnit = new ListRoomsUnit();
+            try {
+                port.send(listRoomsUnit);
+            } catch (IOException e) {
+                Cli.printError("Failed to synchronize state");
+            }
+        }
+
+        if (state instanceof GuestState)
+            seenRooms = false;
     }
 
     public void waitForStateUpdate() throws InterruptedException {
@@ -104,6 +116,9 @@ public abstract class BaseClient {
     }
 
     public void run() {
+        // Ensure cleanup is executed on shutdown
+        Runtime.getRuntime().addShutdownHook(Thread.ofVirtual().unstarted(this::cleanup));
+
         Thread sending = Thread.ofVirtual().unstarted(this::handleSending);
         Thread receiving = Thread.ofVirtual().unstarted(this::handleReceiving);
 
@@ -121,17 +136,17 @@ public abstract class BaseClient {
     private void handleSending() {
         try {
             while (!done) {
-                if (state instanceof InteractiveClientState intState) {
+                if (state instanceof InteractiveState intState) {
                     String input = Cli.getInput();
                     if (input == null) {
-                        Thread.sleep(INPUT_DELAY);  // Wait a bit for some input
+                        Thread.sleep(INPUT_DELAY); // Wait a bit for some input
                         continue;
                         // This prevents lack of input from blocking state updates
                     }
 
                     // State updates can be triggered while waiting for input
                     if (state != intState) {
-                        if (state instanceof InteractiveClientState newState) {
+                        if (state instanceof InteractiveState newState) {
                             intState = newState;
                         } else {
                             continue;
@@ -148,8 +163,6 @@ public abstract class BaseClient {
                         Cli.printError("Failed to send message: " + e.getMessage());
                         continue;
                     }
-
-                    previousUnit = unit.get();
 
                 } else if (state instanceof NonInteractiveState nonInteractiveState) {
                     Optional<ProtocolUnit> unit = nonInteractiveState.buildNextUnit();
@@ -213,16 +226,24 @@ public abstract class BaseClient {
         }
     }
 
-    private void cleanup() {
+    public void cleanup() {
         if (done)
             return;
 
         done = true;
         setState(new DeadState(this));
+
+        session.setLocked(false);
+        try {
+            session.save();
+        } catch (IOException e) {
+            Cli.printError("Failed to save session: " + e.getMessage());
+        }
+
         try {
             port.close();
         } catch (IOException e) {
-            Cli.printError("Unexpected error: " + e.getMessage());
+            Cli.printError("Failed to close port: " + e.getMessage());
         }
     }
 
@@ -289,11 +310,27 @@ public abstract class BaseClient {
 
     protected static Optional<SessionStore> loadSession(String sessionSuffix) {
         String sessionPath = String.format(SESSION_PATH_FORMAT, sessionSuffix);
+        SessionStore sessionStore;
+
         try {
-            return Optional.of(new SessionStore(sessionPath));
+            sessionStore = new SessionStore(sessionPath);
         } catch (IOException e) {
             Cli.printError("Failed to load session: " + e.getMessage());
             return Optional.empty();
         }
+
+        if (sessionStore.isLocked()) {
+            Cli.printWarning("If you got this message right after launching the client, it means you are trying to use the same session in two clients. Try changing the session suffix in the command-line.");
+        }
+
+        sessionStore.setLocked(true);
+        try {
+            sessionStore.save();
+        } catch (IOException e) {
+            Cli.printError("Failed to save session: " + e.getMessage());
+            return Optional.empty();
+        }
+
+        return Optional.of(sessionStore);
     }
 }

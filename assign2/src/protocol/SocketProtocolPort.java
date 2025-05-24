@@ -89,7 +89,7 @@ public class SocketProtocolPort implements ProtocolPort {
         try {
             if (this.reader.isEmpty())
                 return new EofUnit();
-                
+
             reader = this.reader.get();
         } finally {
             thisLock.readLock().unlock();
@@ -142,34 +142,40 @@ public class SocketProtocolPort implements ProtocolPort {
 
     @Override
     public void connect() throws EndpointUnreachableException, IOException {
+        thisLock.readLock().lock();
+        try {
+            if (socket.isPresent())
+                return;
+        } finally {
+            thisLock.readLock().unlock();
+        }
+        
+        Optional<Socket> newSocketOpt = Optional.empty();
+        long backoff = INITIAL_BACKOFF;
+        for (int tries = 0; tries < MAX_RETRIES; tries++) {
+            newSocketOpt = Optional.ofNullable(socketFactory.get());
+            if (newSocketOpt.isPresent())
+                break;
+
+            System.out.println("Connection to server failed, retrying...");
+            backoff *= 2;
+
+            try {
+                Thread.sleep(backoff);
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+                break;
+            }
+        }
+
+        if (newSocketOpt.isEmpty()) {
+            throw new EndpointUnreachableException("Could not establish a connection to the server");
+        }
+
         thisLock.writeLock().lock();
         try {
-            if (socket.isPresent()) {
-                return;
-            }
-
-            long backoff = INITIAL_BACKOFF;
-            for (int tries = 0; tries < MAX_RETRIES; tries++) {
-                socket = Optional.ofNullable(socketFactory.get());
-                if (socket.isPresent())
-                    break;
-
-                System.out.println("Connection to server failed, retrying...");
-                backoff *= 2;
-
-                try {
-                    Thread.sleep(backoff);
-                } catch (InterruptedException e1) {
-                    e1.printStackTrace();
-                    break;
-                }
-            }
-
-            if (socket.isEmpty()) {
-                throw new EndpointUnreachableException("Could not establish a connection to the server");
-            }
-
-            Socket newSocket = socket.get();
+            socket = newSocketOpt;
+            Socket newSocket = newSocketOpt.get();
 
             var input = newSocket.getInputStream();
             reader = Optional.of(new BufferedReader(new InputStreamReader(input)));

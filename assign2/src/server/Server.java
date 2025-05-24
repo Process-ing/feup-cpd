@@ -67,11 +67,21 @@ public class Server {
         return roomMap.putIfAbsent(room.getName(), new RoomEntry(room, isAi)) == null;
     }
 
-    public void createAIRooms(int count) {
-        for (var c = 1; c <= count; c++) {
-            Room room = new AiRoom("ai" + c);
-            if(!addRoom(room, true)) 
-                throw new RoomCreationException("Failed to assign room to server");
+    public void createAIRooms() {
+
+        List<String> names = List.of(
+            "AI Programming",    
+            "AI Psychology",
+            "AI Doodle",
+            "AI Ideas",
+            "AI Study"
+        );
+
+        for (String name : names) {
+            Room room = new AiRoom(name.trim());
+            if (!addRoom(room, true)) {
+                throw new RoomCreationException("Failed to assign room '" + name + "' to server");
+            }
         }
     }
 
@@ -80,13 +90,20 @@ public class Server {
         return entry != null && entry.isAi();
     }
 
+    public List<Room> getRooms() {
+        return roomMap.values().stream()
+                .map(RoomEntry::room)
+                .toList();
+    }
+
     public void run() {
         try {
-            createAIRooms(5);
+            createAIRooms();
         } catch (RoomCreationException e) {
             System.err.println("Failed to create AI rooms: " + e.getMessage());
         }
 
+        int id = 0;
         try {
             while (true) {
                 Socket socket = serverSocket.accept();
@@ -96,7 +113,7 @@ public class Server {
                 port.connect();
 
                 MessageQueue queue = new SyncMessageQueue();
-                ClientThread clientThread = new ClientThread(this, port, queue, null);
+                ClientThread clientThread = new ClientThread(id++, this, port, queue, null);
 
                 //RoomUser user = room.connectUser(new User(clientThread, "JohnDoe" + new Random().nextInt())).get();
                 Guest user = new Guest(clientThread);
@@ -108,7 +125,7 @@ public class Server {
             e.printStackTrace();
         }
     }
-    
+
     public static void main(String[] args) {
         Properties config;
         try {

@@ -1,21 +1,28 @@
 package protocol.unit;
 
-import protocol.ArgedProtocolVisitor;
+import java.util.Optional;
+
+import protocol.ProtocolOkIdentifier;
 import protocol.ProtocolVisitor;
 
-public record OkUnit(String data) implements ProtocolUnit {
+public record OkUnit(ProtocolOkIdentifier id, Optional<String> data) implements ProtocolUnit {
+    public OkUnit(ProtocolOkIdentifier id) {
+        this(id, Optional.empty());
+    }
+
+    public OkUnit(ProtocolOkIdentifier id, String data) {
+        this(id, Optional.ofNullable(data));
+    }
+
     @Override
     public String serialize() {
-        return String.format("ok %s", data);
+        return data.isEmpty()
+            ? String.format("ok %s", id.getName())
+            : String.format("ok %s %s", id.getName(), data.get());
     }
 
     @Override
     public <T> T accept(ProtocolVisitor<T> visitor) {
         return visitor.visit(this);
-    }
-
-    @Override
-    public <R, A> R accept(ArgedProtocolVisitor<R, A> visitor, A arg) {
-        return visitor.visit(this, arg);
     }
 }

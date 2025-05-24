@@ -1,63 +1,77 @@
 package client.state.confirm;
 
 import client.Cli;
-import client.state.AuthenticatedState;
+import client.state.AuthState;
 import client.state.GuestState;
 import client.storage.SessionStore;
-import protocol.unit.LoginUnit;
+import protocol.ProtocolOkIdentifier;
 import protocol.unit.OkUnit;
-import protocol.unit.RegisterUnit;
-import protocol.unit.TokenLoginUnit;
+
+import java.util.Optional;
+
 import client.BaseClient;
+
+record TokenUsername(String token, String username) {}
 
 public class GuestConfirmer extends Confirmer<GuestState> {
     public GuestConfirmer(GuestState state) {
         super(state);
     }
 
-    public Void visit(LoginUnit unit, OkUnit confirmation) {
+    @Override
+    protected void buildVisitor() {
+        addVisit(ProtocolOkIdentifier.LOGIN, this::visitLogin);
+        addVisit(ProtocolOkIdentifier.REGISTER, this::visitRegister);
+    }
+
+    private Optional<TokenUsername> parseTokenUsername(OkUnit confirmation) {
+        Optional<String> data = confirmation.data();
+        if (data.isEmpty())
+            return Optional.empty();
+
+        String[] parts = data.get().split("\n", 2);
+        if (parts.length < 2)
+            return Optional.empty();
+
+        return Optional.of(new TokenUsername(parts[0], parts[1]));
+    }
+
+    private void visitLogin(OkUnit confirmation) {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
 
-        Cli.printResponse("Login successful: " + unit.user());
+        Optional<TokenUsername> tokenUsername = parseTokenUsername(confirmation);
+        if (tokenUsername.isEmpty())
+            return;
 
-        client.setState(new AuthenticatedState(client, unit.user()));
+        String token = tokenUsername.get().token();
+        String username = tokenUsername.get().username();
 
-        String token = confirmation.data();
+        Cli.printResponse("Login successful: " + username);
+
+        client.setState(new AuthState(client, username));
+
         session.clear();
         session.setToken(token);
-        session.setUsername(unit.user());
-
-        return null;
+        session.setUsername(username);
     }
 
-    public Void visit(RegisterUnit unit, OkUnit confirmation) {
+    private void visitRegister(OkUnit confirmation) {
         BaseClient client = getState().getClient();
         SessionStore session = client.getSession();
 
-        Cli.printResponse("Registration successful: " + unit.user());
+        Optional<TokenUsername> tokenUsername = parseTokenUsername(confirmation);
+        if (tokenUsername.isEmpty())
+            return;
 
-        client.setState(new AuthenticatedState(client, unit.user()));
+        String token = tokenUsername.get().token();
+        String username = tokenUsername.get().username();
 
+        Cli.printResponse("Registration successful: " + username);
 
-        String token = confirmation.data();
+        client.setState(new AuthState(client, username));
+
         session.setToken(token);
-        session.setUsername(unit.user());
-
-        return null;
-    }
-
-    public Void visit(TokenLoginUnit unit, OkUnit confirmation) {
-        BaseClient client = getState().getClient();
-        SessionStore session = client.getSession();
-
-        Cli.printResponse("Login successful: " + session.getUsername());
-
-        client.setState(new AuthenticatedState(client, session.getUsername()));
-
-        String token = confirmation.data();
-        session.setToken(token);
-
-        return null;
+        session.setUsername(username);
     }
 }

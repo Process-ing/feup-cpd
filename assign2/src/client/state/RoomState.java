@@ -1,12 +1,11 @@
 package client.state;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
 import client.state.confirm.RoomConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
 import java.util.Optional;
-
 import protocol.ProtocolParser;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
@@ -14,7 +13,7 @@ import protocol.unit.RecvUnit;
 import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 
-public class RoomState extends InteractiveClientState implements SynchronizableState {
+public class RoomState extends InteractiveState implements SynchronizableState {
     private final RoomConfirmer confirmer;
     private final String username;
     private final String roomName;
@@ -44,12 +43,12 @@ public class RoomState extends InteractiveClientState implements SynchronizableS
     @Override
     public Map<String, String> getAvailableCommands() {
         return Map.of(
-            "/help", "/help : Show available commands",
-            "/info", "/info : Show information about session",
-            "/leave", "/leave : Leave the current room",
-            "/logout", "/logout : Logout from current account",
-            "", "<message> : Send a message to the room"
-        );
+                "/help", "/help : Show available commands",
+                "/info", "/info : Show information about session",
+                "/leave", "/leave : Leave the current room",
+                "/logout", "/logout : Logout from current account",
+                "", "<message> : Send a message to the room",
+                "/exit", "/exit : Exit the client");
     }
 
     @Override
@@ -70,9 +69,8 @@ public class RoomState extends InteractiveClientState implements SynchronizableS
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         BaseClient client = this.getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit previousUnit = client.getPreviousUnit();
 
-        previousUnit.accept(confirmer, unit);
+        confirmer.visit(unit);
 
         try {
             session.save();

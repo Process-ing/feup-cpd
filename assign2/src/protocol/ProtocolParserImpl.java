@@ -10,6 +10,7 @@ import protocol.unit.EofUnit;
 import protocol.unit.ErrUnit;
 import protocol.unit.InvalidUnit;
 import protocol.unit.LeaveUnit;
+import protocol.unit.ListRoomsUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -35,6 +36,7 @@ public class ProtocolParserImpl implements ProtocolParser {
                 Map.entry("login", this::buildLogin),
                 Map.entry("register", this::buildRegister),
                 Map.entry("logout", this::buildLogout),
+                Map.entry("list-rooms", this::buildListRooms),
                 Map.entry("enter", this::buildEnter),
                 Map.entry("leave", this::buildLeave),
                 Map.entry("send", this::buildSend),
@@ -94,6 +96,13 @@ public class ProtocolParserImpl implements ProtocolParser {
         return new LogoutUnit();
     }
 
+    private ProtocolUnit buildListRooms(List<String> args) {
+        if (args.size() != 0)
+            return new InvalidUnit();
+
+        return new ListRoomsUnit();
+    }
+
     private ProtocolUnit buildEnter(List<String> args) {
         if (args.size() != 1)
             return new InvalidUnit();
@@ -145,12 +154,16 @@ public class ProtocolParserImpl implements ProtocolParser {
     }
 
     private ProtocolUnit buildOk(List<String> args) {
-        if (args.size() != 1)
+        if (args.size() < 1 || args.size() > 2)
             return new InvalidUnit();
 
-        String data = args.get(0);
+        Optional<ProtocolOkIdentifier> id = ProtocolOkIdentifier.fromString(args.get(0));
+        if (id.isEmpty())
+            return new InvalidUnit();
 
-        return new OkUnit(data);
+        String data = args.size() == 2 ? args.get(1) : "";
+
+        return new OkUnit(id.get(), data);
     }
 
     private ProtocolUnit buildErr(List<String> args) {

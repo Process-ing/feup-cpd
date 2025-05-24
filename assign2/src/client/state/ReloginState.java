@@ -1,9 +1,11 @@
 package client.state;
 
 import client.Cli;
+
 import client.BaseClient;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
+import protocol.unit.ErrUnit;
 import protocol.unit.ProtocolUnit;
 import protocol.unit.TokenLoginUnit;
 
@@ -26,23 +28,27 @@ public class ReloginState extends WaitConfirmState {
     @Override
     protected ClientState getStateOnConfirm() {
         BaseClient client = getClient();
-        SessionStore session =  client.getSession();
-        ClientState newState = session.getRoom() == null
-                ? new AuthenticatedState(client, session.getUsername())
-                : new ReenterState(client, oldState);
+        SessionStore session = client.getSession();
+        ClientState newState;
+
+        if (session.getRoom() == null) {
+            newState = new AuthState(client, session.getUsername());
+        } else {
+            newState = new ReenterState(client, oldState);
+        }
 
         Cli.printResponse("Login successful: " + session.getUsername());
         return newState;
     }
 
     @Override
-    protected ClientState getStateOnError() {
-        BaseClient client = getClient();
-        return new GuestState(client);
-    }
+    protected boolean handleError(ErrUnit unit) {
+        if (unit.id() == ProtocolErrorIdentifier.LOGIN) {
+            BaseClient client = getClient();
+            client.setState(new GuestState(client));
+            return true;
+        }
 
-    @Override
-    protected ProtocolErrorIdentifier getErrorIdentifier() {
-        return ProtocolErrorIdentifier.LOGIN;
+        return false;
     }
 }

@@ -4,6 +4,7 @@ import client.BaseClient;
 import client.Cli;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
+import protocol.unit.ErrUnit;
 import protocol.unit.LoginUnit;
 import protocol.unit.ProtocolUnit;
 
@@ -38,12 +39,12 @@ public class BotLoginState extends WaitConfirmState {
     }
 
     @Override
-    protected ClientState getStateOnError() {
-        return new BotRegisterState(getClient(), password, targetState);
-    }
+    protected boolean handleError(ErrUnit unit) {
+        if (unit.id() != ProtocolErrorIdentifier.LOGIN)
+            return false;
 
-    @Override
-    protected ProtocolErrorIdentifier getErrorIdentifier() {
-        return ProtocolErrorIdentifier.LOGIN;
+        BaseClient client = getClient();
+        client.setState(new BotRegisterState(client, password, targetState));
+        return true;
     }
 }

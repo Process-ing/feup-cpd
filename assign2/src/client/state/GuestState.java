@@ -1,7 +1,7 @@
 package client.state;
 
-import client.Cli;
 import client.BaseClient;
+import client.Cli;
 import client.state.confirm.GuestConfirmer;
 import client.storage.SessionStore;
 import java.util.Map;
@@ -12,7 +12,7 @@ import protocol.unit.ErrUnit;
 import protocol.unit.OkUnit;
 import protocol.unit.ProtocolUnit;
 
-public class GuestState extends InteractiveClientState {
+public class GuestState extends InteractiveState {
     private final GuestConfirmer confirmer;
 
     public GuestState(BaseClient client) {
@@ -27,7 +27,8 @@ public class GuestState extends InteractiveClientState {
                 "/help", "/help : Show available commands",
                 "/info", "/info : Show information about session",
                 "/register", "/register <username> <password> : Register new account",
-                "/login", "/login <username> <password> : Login with account");
+                "/login", "/login <username> <password> : Login with account",
+                "/exit", "/exit : Exit the client");
     }
 
     @Override
@@ -45,9 +46,8 @@ public class GuestState extends InteractiveClientState {
     public Optional<ProtocolUnit> visit(OkUnit unit) {
         BaseClient client = this.getClient();
         SessionStore session = client.getSession();
-        ProtocolUnit previousUnit = client.getPreviousUnit();
 
-        previousUnit.accept(confirmer, unit);
+        confirmer.visit(unit);
 
         try {
             session.save();
@@ -60,9 +60,12 @@ public class GuestState extends InteractiveClientState {
 
     @Override
     public Optional<ProtocolUnit> visit(ErrUnit unit) {
-        // TODO: isto se calhar vai ser alterado pelo CLI
-        if (!unit.id().equals(ProtocolErrorIdentifier.LOGIN))
-            Cli.printError("Authentication error: " + unit.id());
+        if (unit.id() == ProtocolErrorIdentifier.LOGIN) {
+            Cli.printError("Login failed. Please check your username and password.");
+        } else if (unit.id() == ProtocolErrorIdentifier.REGISTER) {
+            Cli.printError("Registration failed. Please try again.");
+        }
+
         return Optional.empty();
     }
 }

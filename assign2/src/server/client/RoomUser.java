@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import exception.NotInRoomException;
+import protocol.ProtocolOkIdentifier;
 import protocol.unit.LeaveUnit;
 import protocol.unit.LogoutUnit;
 import protocol.unit.OkUnit;
@@ -71,7 +72,7 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(newUser.get());
-        return Optional.of(new OkUnit("success"));
+        return Optional.of(new OkUnit(ProtocolOkIdentifier.LEAVE_ROOM));
     }
 
     @Override
@@ -81,7 +82,8 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(new Guest(getThread()));
-        return Optional.of(new OkUnit("success"));
+
+        return Optional.of(new OkUnit(ProtocolOkIdentifier.LOGOUT));
     }
 
     @Override

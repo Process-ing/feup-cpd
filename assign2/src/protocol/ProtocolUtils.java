@@ -14,7 +14,7 @@ public class ProtocolUtils {
         Matcher matcher = pattern.matcher(string);
         while (matcher.find()) {
             if (matcher.group(1) != null) {
-                tokens.add(ProtocolUtils.unescape(matcher.group(1)));
+                tokens.add(ProtocolUtils.unescapeSpecials(matcher.group(1)));
             } else if (matcher.group(2) != null) {
                 tokens.add(matcher.group(2));
             }
@@ -23,11 +23,11 @@ public class ProtocolUtils {
         return tokens;
     }
 
-    public static String escapeToken(String token) {      
-        return "\"" + ProtocolUtils.escape(token) + "\"";
+    public static String escapeToken(String token) {
+        return "\"" + ProtocolUtils.escapeSpecials(token) + "\"";
     }
 
-    public static String escape(String s) {
+    public static String escapeSpecials(String s) {
         return s.replace("\\", "\\\\")
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
@@ -35,11 +35,28 @@ public class ProtocolUtils {
                 .replace("\t", "\\t");
     }
 
-    public static String unescape(String s) {
-        return s.replace("\\t", "\t")
-                .replace("\\r", "\r")
-                .replace("\\n", "\n")
-                .replace("\\\"", "\"")
-                .replace("\\\\", "\\");   
+    public static String unescapeSpecials(String s) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                char next = s.charAt(i + 1);
+                switch (next) {
+                    case 'n': result.append('\n'); i++; break;
+                    case 'r': result.append('\r'); i++; break;
+                    case 't': result.append('\t'); i++; break;
+                    case '"': result.append('\"'); i++; break;
+                    case '\\': result.append('\\'); i++; break;
+                    default: result.append(c);
+                }
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    }
+
+    public static String toKebabCase(String string) {
+        return string.toLowerCase().replace('_', '-');
     }
 }

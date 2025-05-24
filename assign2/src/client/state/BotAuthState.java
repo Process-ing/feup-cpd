@@ -5,6 +5,7 @@ import client.Cli;
 import client.storage.SessionStore;
 import protocol.ProtocolErrorIdentifier;
 import protocol.unit.EnterUnit;
+import protocol.unit.ErrUnit;
 import protocol.unit.ProtocolUnit;
 
 public class BotAuthState extends WaitConfirmState {
@@ -34,14 +35,12 @@ public class BotAuthState extends WaitConfirmState {
     }
 
     @Override
-    protected ClientState getStateOnError() {
+    protected boolean handleError(ErrUnit unit) {
+        if (unit.id() != ProtocolErrorIdentifier.UNAUTHORIZED)
+            return false;
+
         String message = String.format("Bot failed to enter room '%s'",
             getClient().getSession().getRoom());
         throw new IllegalStateException(message);
-    }
-
-    @Override
-    protected ProtocolErrorIdentifier getErrorIdentifier() {
-        return ProtocolErrorIdentifier.UNAUTHORIZED;
     }
 }

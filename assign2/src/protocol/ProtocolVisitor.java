@@ -9,6 +9,8 @@ public interface ProtocolVisitor<T> {
 
     T visit(LogoutUnit unit);
 
+    T visit(ListRoomsUnit unit);
+
     T visit(EnterUnit unit);
 
     T visit(LeaveUnit unit);

@@ -2,10 +2,10 @@ package protocol.unit;
 
 import protocol.ProtocolVisitor;
 
-public record LeaveUnit() implements ProtocolUnit {
+public record ListRoomsUnit() implements ProtocolUnit {
     @Override
     public String serialize() {
-        return "leave";
+        return "list-rooms";
     }
 
     @Override

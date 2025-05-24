@@ -1,5 +1,6 @@
 package server.room;
 
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -29,7 +30,6 @@ public class AiRoom implements Room {
     private final MessageTable messageTable;
     private final BlockingQueue<Runnable> taskQueue;
     private final RoomUser bot;
-
 
     public AiRoom(String name) {
         this.name = name;
@@ -71,8 +71,10 @@ public class AiRoom implements Room {
 
         RoomUser newUser = new RoomUser(user.getThread(), user.getName(), this, user.getToken());
         userMap.put(newUser.getName(), newUser);
-        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name)));        
-        
+
+        var content = String.format("Hi, %s! Welcome to the AI room %s! You can start chatting with me.", newUser.getName(), this.name);
+        newUser.getThread().getMessageQueue().push(new Message(-1, "Bot", content));
+
         return Optional.of(newUser);
     }
 
@@ -132,7 +134,7 @@ public class AiRoom implements Room {
 
             if (response.statusCode() != 200)
                 return null;
-            
+
             String body = response.body();
 
             // This was done using regex to make it less hardcoded
@@ -142,10 +144,12 @@ public class AiRoom implements Room {
 
             if (!m.find())
                 return null;
-            
+
             String answer = m.group(1).strip();
-            return ProtocolUtils.unescape(answer);
-        
+            return ProtocolUtils.unescapeSpecials(answer);
+
+        } catch (ConnectException e) {
+            return "Sorry, service is unavailable. Please try again later.";
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -156,17 +160,19 @@ public class AiRoom implements Room {
         List<Message> recent = messageTable.getLast(CONTEXT_WINDOW);
         StringBuilder prompt = new StringBuilder();
 
-        prompt.append(String.format("You are a chat bot in a room with different human users. Here are the last %d messages: ", recent.size()));
+        prompt.append(String.format("You are the dedicated AI companion for this room %s.", this.name));
+        prompt.append(String.format("Here are the last %d messages: ", recent.size()));
         for (Message message: recent) {
             prompt.append(String.format("%s:%s;", message.username(), message.content()));
         }
+        prompt.append("Now, respond to the last message as if you were a human user in this room. Use a friendly and helpful tone.");
 
-        return ProtocolUtils.escape(prompt.toString());
+        return ProtocolUtils.escapeSpecials(prompt.toString());
     }
 
     private void broadcastMessage(String content) {
         Message message = messageTable.add(bot, content);
-        
+
         for (RoomUser user : getOnlineUsers()) {
             MessageQueue userQueue = user.getThread().getMessageQueue();
             userQueue.push(message);

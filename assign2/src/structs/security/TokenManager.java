@@ -61,4 +61,24 @@ public final class TokenManager {
             return Optional.of(session.username());
         } finally { lock.readLock().unlock(); }
     }
+
+    public boolean invalidate(String token) {
+        lock.writeLock().lock();
+        try {
+            Session session = userSessionMap.remove(token);
+            if (session != null) {
+                tokenUserMap.remove(session.username());
+                return true;
+            } else {
+                return false;
+            }
+        } finally { lock.writeLock().unlock(); }
+    }
+
+    public String getUserToken(String username) {
+        lock.readLock().lock();
+        try {
+            return tokenUserMap.get(username);
+        } finally { lock.readLock().unlock(); }
+    }
 }

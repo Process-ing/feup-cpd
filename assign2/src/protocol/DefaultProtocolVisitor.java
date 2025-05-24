@@ -21,6 +21,11 @@ public interface DefaultProtocolVisitor<T> extends ProtocolVisitor<T> {
     }
 
     @Override
+    default T visit(ListRoomsUnit unit) {
+        return visitDefault(unit);
+    }
+
+    @Override
     default T visit(EnterUnit unit) {
         return visitDefault(unit);
     }
