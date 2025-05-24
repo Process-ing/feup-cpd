@@ -84,4 +84,30 @@ public class SyncAuthDb implements AuthDb {
 
         return Optional.of(new User(thread, validated.get(), newToken));
     }
+
+    @Override
+    public boolean userExists(String user) {
+        readLock.lock();
+
+        try {
+            return creds.containsKey(user);
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public boolean logout(String token) {
+        Optional<String> user = tokenManager.validate(token);
+        if (user.isEmpty())
+            return false;
+
+        writeLock.lock();
+
+        try {
+            return tokenManager.invalidate(token);
+        } finally {
+            writeLock.unlock();
+        }
+    }
 }

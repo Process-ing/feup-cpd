@@ -18,6 +18,7 @@ import server.Server;
 import server.room.AiRoom;
 import server.room.Room;
 import server.room.RoomImpl;
+import structs.AuthDb;
 
 public class User extends Client {
     private final String name;
@@ -97,6 +98,9 @@ public class User extends Client {
         ClientThread thread = getThread();
 
         thread.setClient(new Guest(thread));
+
+        AuthDb authDb = getThread().getServer().getAuthDb();
+        authDb.logout(token);
 
         return Optional.of(new OkUnit(null));
     }

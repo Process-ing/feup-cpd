@@ -13,6 +13,7 @@ import protocol.unit.SendUnit;
 import protocol.unit.SyncUnit;
 import server.ClientThread;
 import server.room.Room;
+import structs.AuthDb;
 import structs.Message;
 import structs.MessageQueue;
 
@@ -82,6 +83,10 @@ public class RoomUser extends Client {
             throw new NotInRoomException();
 
         getThread().setClient(new Guest(getThread()));
+
+        AuthDb authDb = getThread().getServer().getAuthDb();
+        authDb.logout(token);
+
         return Optional.of(new OkUnit(ProtocolOkIdentifier.LOGOUT));
     }
 
