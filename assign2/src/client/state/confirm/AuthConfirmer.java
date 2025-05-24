@@ -1,6 +1,8 @@
 package client.state.confirm;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import client.BaseClient;
 import client.Cli;
@@ -20,15 +22,23 @@ public class AuthConfirmer extends Confirmer<AuthState> {
 
     @Override
     public Void visit(ListRoomsUnit unit, OkUnit arg) {
-        String[] rooms = arg.data().split(",");
-        Arrays.sort(rooms);
+        String[] roomDivisions = arg.data().split("\\n\\n");
+        if (roomDivisions.length != 2)
+            return null;
 
-        Cli.printResponse("Available rooms: ");
-        for (String room : rooms) {
-            Cli.printResponse(" - " + room);
-        }
+        List<String> normalRooms = toRoomNames(roomDivisions[0]);
+        List<String> aiRooms = toRoomNames(roomDivisions[1]);
 
+        Cli.printRooms(normalRooms, aiRooms);
         return null;
+    }
+
+    private List<String> toRoomNames(String division) {
+        List<String> roomNames = Arrays.asList(division.split("\\n"));
+        if (roomNames.getFirst().equals(""))
+            return List.of();
+        Collections.sort(roomNames);
+        return roomNames;
     }
 
     @Override

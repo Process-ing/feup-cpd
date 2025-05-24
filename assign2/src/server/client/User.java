@@ -42,10 +42,18 @@ public class User extends Client {
         Server server = thread.getServer();
 
         List<Room> rooms = server.getRooms();
-        List<String> roomNames = rooms.stream()
+
+        List<String> aiRoomNames = rooms.stream()
+                .filter(room -> server.isRoomAi(room.getName()))
                 .map(Room::getName)
                 .toList();
-        String data = ProtocolUtils.escapeToken(String.join(",", roomNames));
+
+        List<String> roomNames = rooms.stream()
+                .filter(room -> !server.isRoomAi(room.getName()))
+                .map(Room::getName)
+                .toList();
+
+        String data = ProtocolUtils.escapeToken(String.join("\n", roomNames) + "\n\n" + String.join("\n", aiRoomNames));
 
         return Optional.of(new OkUnit(data));
     }

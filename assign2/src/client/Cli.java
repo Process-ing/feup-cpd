@@ -3,6 +3,7 @@ package client;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.Map;
 
 public class Cli {
@@ -46,14 +47,26 @@ public class Cli {
     }
 
     public static void printInfo(String info) {
-        System.out.println("\r\033[2K    \033[36mSession information\033[0m");
+        System.out.println("\r\033[2K\033[36mSession Information\033[0m");
         System.out.println(info);
     }
 
     public static void printHelp(Map<String, String> availableCommands) {
-        System.out.println("\r\033[2K    \033[36mAvailable commands\033[0m");
+        System.out.println("\r\033[2K\033[36mAvailable Commands\033[0m");
         for (String description: availableCommands.values()) {
             System.out.printf("%s\n", description);
+        }
+    }
+
+    public static void printRooms(List<String> rooms, List<String> aiRooms){
+        if (!rooms.isEmpty()) {
+            System.out.println("\r\033[2K\033[36mAvailable Rooms\033[0m");
+            for (String room: rooms) {
+                System.out.printf(" ◇ %s\n", room);
+            }
+        }
+        for (String aiRoom: aiRooms) {
+            System.out.printf(" ◈ %s \033[35m(AI)\033[0m\n", aiRoom);
         }
     }
 }
