@@ -2,8 +2,8 @@
 
 CPD Projects of group T13G12.
 
-- **[Project 1](./assign1/)**
-- **[Project 2](./assign2/)**
+- **[Project 1](./assign1/src)**
+- **[Project 2](./assign2/src)**
 
 Group members:
 
