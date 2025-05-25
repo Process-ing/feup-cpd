@@ -321,6 +321,7 @@ public abstract class BaseClient {
 
         if (sessionStore.isLocked()) {
             Cli.printWarning("If you got this message right after launching the client, it means you are trying to use the same session in two clients. Try changing the session suffix in the command-line.");
+            return Optional.of(new SessionStore());
         }
 
         sessionStore.setLocked(true);
