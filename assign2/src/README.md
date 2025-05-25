@@ -37,7 +37,7 @@ By default, the server does not come configured or with the certificates generat
 ./gen-cert.sh                                # Generate SSL certificates
 ```
 
-After this, the certificates and configurations will be saved in the `src/build` directory.
+After this, the certificates and configurations will be saved in the `src/build` directory, in the files `server.properties` and `client.properties`. If you want to change the configurations, e.g. to use a different server host or port, you must edit these files directly.
 
 ### Building and Running the Project
 
@@ -65,6 +65,16 @@ java client.Client <session-suffix>
 ```
 
 Note: a suffix can optionally be passed to allow running multiple sessions on the same machine
+
+#### Running Bots
+
+This project also includes a few bots (clients that login and enter a room automatically, and send messages without user feedback). Inside the `build/` directory, they can be launched using the following commands:
+
+```bash
+java client.bot.FixedIntervalBot <room>   # Sends messages with a fixed period (default 1 seconds)
+java client.bot.RandomIntervalBot <room>  # Sends messages with a variable period (max period of 2 seconds by default)
+java client.bot.UnstableBot <room>        # On every message send, has a low probability of disconnecting, retrying right after
+```
 
 ## Usage
 
