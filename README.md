@@ -4,9 +4,9 @@
 > Faculty: [FEUP](https://sigarra.up.pt/feup/en/web_page.Inicial)<br>
 > Professor: [João Resende](https://sigarra.up.pt/feup/en/func_geral.formview?p_codigo=581903)<br>
 > Authors: [Bruno Oliveira](https://github.com/Process-ing), [Mansur Mustafin](https://github.com/Mansur-Mustafin), [Rodrigo Silva](https://github.com/racoelhosilva)<br>
-> Grades:
-> - First Project: 19.1/20
-> - Second Project: 19.0/20
+> Grades:<br>
+> &emsp; First Project: 19.1/20<br>
+> &emsp; Second Project: 19.0/20<br>
 
 CPD Projects of group T13G12.
 
